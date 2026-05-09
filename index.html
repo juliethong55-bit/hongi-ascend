@@ -417,7 +417,7 @@ const DEFAULT_GRAMMARS = [
   category:"관계사",
   title:"관계대명사 who / which / that",
   formula:"선행사(사람)+who  |  선행사(사물)+which  |  공통+that  (콤마 뒤 that 불가)",
-  description:"두 문장을 하나로 합칠 때 공통 명사를 대신하는 대명사이자 접속사 역할을 한다.",
+  deion:"두 문장을 하나로 합칠 때 공통 명사를 대신하는 대명사이자 접속사 역할을 한다.",
   targetTags:["중2","중3","ALL"],
   examples:[
     {en:"I have a friend [[who lives]] in Busan.", ko:"나는 부산에 사는 친구가 있다.", note:"선행사 friend(사람)"},
@@ -715,7 +715,7 @@ function bindAdminPanel(){
       id:"ug"+Date.now(),
       no: DEFAULT_GRAMMARS.length + extra.length + 1,
       category:cat||"기타", title, formula:formula||"",
-      description:desc||"", targetTags: tags.length?tags:["ALL"],
+      deion:desc||"", targetTags: tags.length?tags:["ALL"],
       examples, practice
     });
     saveExtraGrammars(extra);
@@ -860,7 +860,7 @@ function renderGrammar(){
         <div class="s">${(g.targetTags||["ALL"]).map(t=>escapeHtml(t)).join(" · ")}</div>
       </div>
       ${g.formula?`<div class="formula">📐 ${gramParse(g.formula)}</div>`:""}
-      ${g.description?`<div class="gram-desc">${gramParse(g.description)}</div>`:""}
+      ${g.deion?`<div class="gram-desc">${gramParse(g.deion)}</div>`:""}
       <div class="section"><h2>① 예문 분석 (Highlight)</h2>${exHtml}</div>
       ${prHtml?`<div class="section"><h2>② 연습문제</h2>${prHtml}${memo}</div>`:memo}
     </div>
@@ -911,34 +911,50 @@ function render(){
   else renderPassage();
 }
 
-/* ===================== Boot ===================== */
-function showApp(){
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").style.display="block";
+/* ===================== Boot & Login Fix (v3.1) ===================== */
+// 1. 로그인 핵심 함수
+function tryLogin() {
+  const id = document.getElementById("lg-id").value.trim();
+  const pw = document.getElementById("lg-pw").value;
+  const s = authenticate(id, pw);
+  if (s) {
+    setSession(s);
+    session = s;
+    showApp();
+  } else {
+    document.getElementById("lg-err").textContent = "아이디 또는 비밀번호가 올바르지 않습니다.";
+  }
+}
+
+function showApp() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
   go("dash");
 }
-function tryLogin(){
-  const id=document.getElementById("lg-id").value.trim();
-  const pw=document.getElementById("lg-pw").value;
-  const s=authenticate(id,pw);
-  if(s){ setSession(s); session=s; showApp(); }
-  else{ document.getElementById("lg-err").textContent="아이디 또는 비밀번호가 올바르지 않습니다. (학생 PW = 학번)"; }
-}
-document.getElementById("lg-go").addEventListener("click",tryLogin);
-document.getElementById("lg-pw").addEventListener("keydown",e=>{if(e.key==="Enter")tryLogin();});
-document.getElementById("logout").addEventListener("click",()=>{ clearSession(); location.reload(); });
-document.getElementById("flowBtn").addEventListener("click",()=>{
-  flowOn=!flowOn;
-  const sh=document.getElementById("sheet");
-  if(sh) sh.classList.toggle("flow-on",flowOn);
-  document.getElementById("flowBtn").textContent = flowOn ? "🌊 FLOW OFF" : "🌊 FLOW ON";
-});
-document.getElementById("printBtn").addEventListener("click",()=>window.print());
-document.getElementById("homeBtn").addEventListener("click",()=>go("dash"));
 
-// auto-resume
-const saved=getSession();
-if(saved){ session=saved; showApp(); }
+// 2. 페이지 로드 즉시 이벤트 연결 (먹통 방지)
+window.onload = function() {
+  // 로그인 버튼 연결
+  const lgGo = document.getElementById("lg-go");
+  if (lgGo) lgGo.onclick = tryLogin;
+
+  // 엔터키 지원
+  const lgPw = document.getElementById("lg-pw");
+  if (lgPw) lgPw.onkeydown = (e) => { if (e.key === "Enter") tryLogin(); };
+
+  // 로그아웃 버튼 연결
+  const logoutBtn = document.getElementById("logout");
+  if (logoutBtn) logoutBtn.onclick = () => { clearSession(); location.reload(); };
+
+  // 자동 로그인 체크
+  const saved = getSession();
+  if (saved) {
+    session = saved;
+    showApp();
+  }
+};
+
+// 기존에 존재하던 go, render 관련 함수들은 이 아래에 그대로 두시면 됩니다.
 </script>
 </body>
 </html>
