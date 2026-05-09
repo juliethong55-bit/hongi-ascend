@@ -1,0 +1,139 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { PassageView } from "@/components/clinic/PassageView";
+import { usePassageStore } from "@/lib/passageStore";
+import { AdminPanel } from "@/components/clinic/AdminPanel";
+import { downloadStudentHtml } from "@/lib/exportStudentHtml";
+
+export const Route = createFileRoute("/")({
+  component: ClinicDashboard,
+});
+
+function ClinicDashboard() {
+  const { passages, update, reset } = usePassageStore();
+  const [activeId, setActiveId] = useState<string>("ALL");
+  const [flowOn, setFlowOn] = useState(true);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const clickStreak = useRef<{ n: number; t: number }>({ n: 0, t: 0 });
+
+  // Hidden Admin Mode: triple-click on logo OR Ctrl/⌘ + Shift + A
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        setAdminOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const onLogoClick = () => {
+    const now = Date.now();
+    if (now - clickStreak.current.t < 600) clickStreak.current.n += 1;
+    else clickStreak.current.n = 1;
+    clickStreak.current.t = now;
+    if (clickStreak.current.n >= 3) {
+      clickStreak.current.n = 0;
+      setAdminOpen(true);
+    }
+  };
+
+  const visible = activeId === "ALL" ? passages : passages.filter(p => p.id === activeId);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="no-print sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur">
+        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onLogoClick}
+              title="Admin Mode (3회 클릭 또는 Ctrl/⌘+Shift+A)"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black select-none"
+            >
+              H
+            </button>
+            <div>
+              <div className="text-sm font-black tracking-tight">Hongi Ascend High-Master v1.0</div>
+              <div className="text-[11px] text-muted-foreground -mt-0.5">
+                홍이어쎈영어 · 고등독해 마스터 클리닉 · Master Output Engine
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setFlowOn(v => !v)}
+              className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                flowOn
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40"
+              }`}
+              aria-pressed={flowOn}
+            >
+              <span className={`inline-flex h-4 w-7 items-center rounded-full p-0.5 transition ${flowOn ? "bg-primary-foreground/30" : "bg-muted"}`}>
+                <span className={`h-3 w-3 rounded-full bg-card transition ${flowOn ? "translate-x-3 bg-primary-foreground" : ""}`} />
+              </span>
+              FLOW {flowOn ? "ON" : "OFF"}
+            </button>
+
+            <button
+              onClick={() => downloadStudentHtml(passages)}
+              className="rounded-full border border-primary/40 bg-card px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary-soft"
+            >
+              📤 학생용 HTML
+            </button>
+
+            <button
+              onClick={() => window.print()}
+              className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground shadow-sm transition hover:opacity-90"
+            >
+              🖨 A4 PDF 출력
+            </button>
+          </div>
+        </div>
+
+        <nav className="mx-auto max-w-[1200px] overflow-x-auto px-6 pb-3">
+          <ul className="flex gap-2">
+            <KanbanTab active={activeId === "ALL"} onClick={() => setActiveId("ALL")} label="전체" sub={`${passages.length}개 지문`} />
+            {passages.map(p => (
+              <KanbanTab key={p.id} active={activeId === p.id} onClick={() => setActiveId(p.id)} label={`#${String(p.no).padStart(2, "0")} ${p.title}`} sub={p.source} />
+            ))}
+          </ul>
+        </nav>
+      </header>
+
+      <main className="px-4 py-8 print:p-0">
+        <div className="mx-auto flex max-w-[1200px] flex-col items-center gap-8 print:gap-0">
+          {visible.map((p, idx) => (
+            <div key={p.id} className={idx > 0 ? "page-break w-full flex justify-center" : "w-full flex justify-center"}>
+              <PassageView passage={p} flowOn={flowOn} />
+            </div>
+          ))}
+        </div>
+      </main>
+
+      <footer className="no-print py-10 text-center text-xs text-muted-foreground">
+        FLOW Engine · Habruta · Paraphrasing Variants — A4 (180mm / 15mm margin) optimized
+      </footer>
+
+      <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} passages={passages} onSave={update} onReset={reset} />
+    </div>
+  );
+}
+
+function KanbanTab({ active, onClick, label, sub }: { active: boolean; onClick: () => void; label: string; sub: string }) {
+  return (
+    <li>
+      <button
+        onClick={onClick}
+        className={`flex min-w-[140px] flex-col items-start rounded-xl border px-3 py-2 text-left transition ${
+          active ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-card hover:border-primary/40 hover:bg-primary-soft/40"
+        }`}
+      >
+        <span className="text-[12.5px] font-bold leading-tight">{label}</span>
+        <span className={`mt-0.5 text-[10.5px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{sub}</span>
+      </button>
+    </li>
+  );
+}
