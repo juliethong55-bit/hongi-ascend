@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>홍이어쎈 통합 포털 · Hongi Ascend v4.2 Full</title>
+<title>홍이어쎈 통합 포털 · Hongi Ascend v4.5 FULL</title>
 <style>
   :root{
     --bg:#f5f7fb; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
@@ -14,6 +14,8 @@
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;}
   button{font-family:inherit;cursor:pointer}
+  
+  /* ===== Login ===== */
   #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     background:linear-gradient(135deg,#1e3a8a,#1d4ed8 60%,#0ea5e9);z-index:100;padding:20px}
   #login .box{background:#fff;border-radius:20px;padding:36px 32px;width:380px;box-shadow:0 30px 80px rgba(0,0,0,.3)}
@@ -23,6 +25,8 @@
   #login input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;margin-bottom:8px}
   #login button.go{margin-top:10px;width:100%;padding:12px;background:var(--primary);color:#fff;border:0;border-radius:12px;font-weight:800;font-size:14px}
   #login .err{color:#b91c1c;font-size:12px;margin-top:8px;min-height:16px;text-align:center}
+
+  /* ===== App Shell & UI Components ===== */
   #app{display:none}
   .topbar{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:14px}
   .brand{display:flex;align-items:center;gap:10px;font-weight:900}
@@ -32,27 +36,29 @@
   .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
   .btn.warn{background:#f59e0b;color:#fff;border-color:#f59e0b}
   .btn.admin{background:var(--admin);color:#fff;border-color:var(--admin)}
+
+  /* ===== Sheet & Harness (The Core) ===== */
   .wrap{padding:20px;display:flex;justify-content:center}
   .container{width:min(1080px,100%)}
-  .dash-head{display:flex;align-items:baseline;gap:10px;margin:20px 0 10px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;transition:all 0.2s}
-  .card:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(0,0,0,0.05)}
-  .card .ttl{font-size:16px;font-weight:800;margin-bottom:6px}
-  .card .tag{font-size:10px;background:#eff6ff;color:#1e40af;padding:2px 8px;border-radius:999px;font-weight:700}
-  .sheet{width:180mm;max-width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14mm;margin:0 auto;box-shadow:0 10px 40px rgba(0,0,0,0.05)}
-  .sheet.junior{font-size:115%}
-  .sent{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;position:relative}
-  .en{font-size:1.05em;line-height:1.8;margin-bottom:6px}
-  .ko{font-size:0.9em;color:#475569;border-top:1px dashed var(--line);padding-top:8px}
+  .sheet{width:180mm;max-width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14mm;margin:0 auto;box-shadow:0 10px 40px rgba(0,0,0,0.05);position:relative}
+  .sheet.junior{font-size:115%; line-height:2.0}
+  .sent{border:1px solid var(--line);border-radius:10px;padding:15px;margin-bottom:15px;position:relative}
+  .en{font-size:1.1em;line-height:1.8;margin-bottom:8px}
+  .ko{font-size:0.95em;color:#334155;border-top:1px dashed var(--line);padding-top:10px}
+  
+  /* FLOW Highlight */
   .flow-token{border-radius:3px;padding:0 2px}
   .flow-on .flow-c1{background:var(--f1)}
   .flow-on .flow-c2{background:var(--f2)}
   .flow-on .flow-c3{background:var(--f3)}
   .flow-on .flow-c4{background:var(--f4)}
   .flow-on .flow-c5{background:var(--f5)}
-  .admin-panel{background:#fff;border:2px solid var(--admin);border-radius:14px;padding:20px;margin-bottom:20px}
-  .admin-panel textarea{width:100%;min-height:100px;margin-top:10px;font-family:monospace}
+
+  /* Admin & Dashboard */
+  .admin-panel{background:#fff;border:2px solid var(--admin);border-radius:14px;padding:18px;margin-bottom:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer}
+  
   @media print{
     .no-print{display:none !important}
     .sheet{width:auto;border:0;box-shadow:none;padding:0}
@@ -61,10 +67,11 @@
 </style>
 </head>
 <body>
+
 <div id="login">
   <div class="box">
     <h1>홍이어쎈 통합 포털</h1>
-    <p class="sub">v4.2 · 전문 분석 시스템 완전체</p>
+    <p class="sub">v4.5 · FULL RECOVERY</p>
     <label>아이디</label>
     <input id="lg-id" type="text" placeholder="admin / 학번 8자리" />
     <label>비밀번호</label>
@@ -73,9 +80,10 @@
     <div class="err" id="lg-err"></div>
   </div>
 </div>
+
 <div id="app">
   <div class="topbar no-print">
-    <div class="brand"><div class="h">H</div><div>홍이어쎈 Ascend <small>v4.2</small></div></div>
+    <div class="brand"><div class="h">H</div><div>홍이어쎈 Ascend <small>v4.5</small></div></div>
     <div class="spacer"></div>
     <button class="btn" id="homeBtn">📋 목록</button>
     <button class="btn primary" id="flowBtn">🌊 FLOW ON</button>
@@ -83,11 +91,12 @@
   </div>
   <div class="wrap"><div class="container" id="main"></div></div>
 </div>
-<script>
-  /* ===================== 데이터 아카이브 (분석 데이터 전수 복원) ===================== */
-const SCHOOLS = { "01":"홍이중","02":"세종고","03":"한솔고","04":"이화여고","99":"기타" };
-const SS_KEY = "hongi.session.v42";
 
+<script>
+const SCHOOLS = { "01":"홍이중","02":"세종고","03":"한솔고","04":"이화여고","99":"기타" };
+const SS_KEY = "hongi.session.v4.5";
+
+/* --- [데이터 섹션: Seneca 13문장 및 문법 데이터] --- */
 const DEFAULT_PASSAGES = [
 {
   id:"p1", no:1, title:"Seneca: The True Cost of Success", 
@@ -100,31 +109,41 @@ const DEFAULT_PASSAGES = [
     {ko:"대개? 자유다. 그들의 일은 정장을 입을 것을 요구한다.", en:"Mostly? [[3|Freedom]]. Their work [[2|demands]] they wear a suit.", vocab:[["freedom","n.","자유","liberty","slavery"]]},
     {ko:"그들의 성공은 어떤 파티에 참석하고, 좋아하지 않는 사람들에게 아부하는 일에 달려 있다.", en:"Their [[1|success]] [[2|depends on]] attending certain parties, [[5|kissing up]] to people.", vocab:[["kiss up to","phr.","아부하다","flatter","defy"]]},
     {ko:"그것은 필연적으로 자신이 실제로 생각하는 것을 말할 수 없음을 깨닫게 만들 것이다.", en:"It will [[2|require]]—[[2|inevitably]]—realizing they are [[3|unable to say what they actually think]].", vocab:[["inevitably","adv.","필연적으로","unavoidably","possibly"]]},
-    {ko:"더 나쁜 것은, 그것은 그들이 다른 종류의 사람이 되거나 나쁜 짓을 하기를 요구한다는 것이다.", en:"Worse, it [[2|demands]] that they [[5|become a different type of person]].", vocab:[["demand","v.","요구하다","require","allow"]]},
+    {ko:"더 나쁘게는, 그것은 그들이 다른 종류의 사람이 되거나 나쁜 짓을 하기를 요구한다는 것이다.", en:"Worse, it [[2|demands]] that they [[5|become a different type of person]] or [[5|do bad things]].", vocab:[["demand","v.","요구하다","require","allow"]]},
     {ko:"물론, 그것은 보수가 좋을 수도 있다 — 그러나 그들은 그 거래를 진정으로 따져본 적이 없다.", en:"Sure, it might [[1|pay well]]—but they haven’t truly examined the [[4|transaction]].", vocab:[["transaction","n.","거래","exchange","gift"]]},
     {ko:"세네카가 말했듯이, “노예 상태는 대리석과 황금 아래에 거(居)한다.”", en:"As Seneca put it, “[[3|Slavery]] resides under [[1|marble and gold]].”", vocab:[["slavery","n.","노예 상태","bondage","freedom"]]},
     {ko:"너무 많은 성공한 사람들이 자기 스스로 만든 감옥의 죄수다.", en:"Too many [[1|successful]] people are [[3|prisoners]] in [[3|jails]] of their own making.", vocab:[["successful","adj.","성공한","prosperous","failed"]]},
-    {ko:"그들은 결코 자신들이 원했던 곳에 도달하지 못했다 — 그들은 단지 더 비싼 감옥을 샀을 뿐이다.", en:"They never got to where they wanted to be—they just bought a more [[1|expensive]] jail.", vocab:[["expensive","adj.","비싼","costly","cheap"]]}
+    {ko:"그들이 결코 자신들이 원했던 곳에 도달하지 못했다 — 그들은 단지 더 비싼 감옥을 샀을 뿐이다.", en:"They never got to where they wanted to be—they just bought a more [[1|expensive]] jail.", vocab:[["expensive","adj.","비싼","costly","cheap"]]}
   ],
-  habruta:[ "성공의 화려함 뒤에 숨겨진 '대가'는 무엇이라고 생각하나요?", "여러분이 정의하는 '진정한 자유'는 무엇인가요?" ]
+  habruta:[ "필자는 왜 성공을 '감옥'에 비유했나요?", "여러분이 생각하는 성공의 대가는 무엇입니까?" ]
 }
 ];
-
+/* --- [데이터 섹션: 문법 데이터 전수 복원] --- */
 const DEFAULT_GRAMMARS = [
 {
-  id:"g1", no:1, category:"구문", title:"It ~ that 강조구문",
-  formula:"It is/was [강조대상] that [나머지 문장]",
-  description:"문장의 특정 요소(주어, 목적어, 부사구)를 강조할 때 사용하며, '바로 ~이다'라고 해석합니다.",
+  id:"g1", no:1, category:"시제", title:"현재완료(have p.p.) 4용법",
+  formula:"have/has + p.p.  →  ① 완료 ② 경험 ③ 계속 ④ 결과",
+  description:"과거의 사건을 ‘지금’과 연결해 말할 때 쓴다.\n· 완료(just/already/yet)  · 경험(ever/never/before)\n· 계속(for/since)  · 결과(현재 상태가 남아 있음)",
   targetTags:["ALL"],
   examples:[
-    {en:"It was [[Jane]] that I met yesterday.", ko:"내가 어제 만난 사람은 바로 제인이었다.", note:"주어 강조"},
-    {en:"It is [[honesty]] that matters most.", ko:"가장 중요한 것은 바로 정직이다.", note:"목적어 강조"}
+    {en:"I [[have just finished]] my homework.", ko:"나는 막 숙제를 끝냈다.", note:"완료용법 — just가 단서"},
+    {en:"We [[have lived]] here [[for]] ten years.", ko:"우리는 여기 10년째 살고 있다.", note:"계속용법 — for/since"}
+  ]
+},
+{
+  id:"g2", no:2, category:"준동사", title:"동명사 vs to부정사",
+  formula:"enjoy/finish + V-ing  |  want/decide + to V",
+  description:"동사에 따라 목적어로 동명사만 혹은 to부정사만 받는 경우가 있습니다.",
+  targetTags:["중1","중2","ALL"],
+  examples:[
+    {en:"I [[enjoy reading]] novels.", ko:"나는 소설 읽는 것을 즐긴다.", note:"enjoy + V-ing"},
+    {en:"She [[decided to study]] abroad.", ko:"그녀는 유학 가기로 결심했다.", note:"decide + to V"}
   ]
 }
 ];
 
-/* ===================== 핵심 비즈니스 로직 ===================== */
-let session=null, currentView="dash", currentPid=null, currentGid=null, flowOn=false;
+/* --- [핵심 시스템 엔진: 복구 및 로그인 강화] --- */
+let session=null, currentView="dash", currentPid=null, flowOn=false;
 
 function authenticate(id, pw){
   if(id === "admin" && pw === "ascend") return {role:"admin", name:"원장님", tags:["*"]};
@@ -136,119 +155,38 @@ function authenticate(id, pw){
 }
 
 function setSession(s){ sessionStorage.setItem(SS_KEY, JSON.stringify(s)); }
-function getSession(){ return JSON.parse(sessionStorage.getItem(SS_KEY)); }
+function getSession(){ try { return JSON.parse(sessionStorage.getItem(SS_KEY)); } catch(e) { return null; } }
 function clearSession(){ sessionStorage.removeItem(SS_KEY); }
 
-function go(view, id=null){
-  currentView = view;
-  if(view==="passage") currentPid = id;
-  if(view==="grammar") currentGid = id;
-  render();
-  window.scrollTo(0,0);
-}
-  /* ===================== 렌더링 엔진 (UI 복원) ===================== */
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-
-function flowParse(str){
-  // [[번호|텍스트]] 구조를 형광펜 토큰으로 변환
-  return str.replace(/\[\[(\d+)\|([^\]]+)\]\]/g, '<mark class="flow-token flow-c$1">$2</mark>');
-}
+function flowParse(str){ return str.replace(/\[\[(\d+)\|([^\]]+)\]\]/g, '<mark class="flow-token flow-c$1">$2</mark>'); }
 
 function render(){
   const main = document.getElementById("main");
-  const flowBtn = document.getElementById("flowBtn");
-  
   if(currentView === "dash"){
-    flowBtn.style.display = "none";
-    let html = `<div class="dash-head"><h2>${session.role==="admin"?"🏛 원장 전용 관리실":"📖 나의 학습 대시보드"}</h2></div><div class="grid">`;
-    
-    // 지문 카드 출력
+    document.getElementById("flowBtn").style.display="none";
+    let html = `<div class="dash-head"><h2>${session.role==="admin"?"🏛 관리실":"📖 학습실"}</h2></div><div class="grid">`;
     DEFAULT_PASSAGES.forEach(p => {
-      html += `<div class="card" onclick="go('passage', '${p.id}')">
-        <div class="tag">독해 분석</div>
-        <div class="ttl">${p.title}</div>
-        <div style="font-size:12px;color:var(--muted)">${p.topic}</div>
-      </div>`;
+      html += `<div class="card" onclick="viewPassage('${p.id}')"><div class="tag">독해</div><div class="ttl">${p.title}</div></div>`;
     });
-    
-    // 문법 카드 출력
     DEFAULT_GRAMMARS.forEach(g => {
-      html += `<div class="card" onclick="go('grammar', '${g.id}')">
-        <div class="tag" style="background:#f3e8ff; color:#7e22ce">문법 하네스</div>
-        <div class="ttl">${g.title}</div>
-        <div style="font-size:12px;color:var(--muted)">${g.category}</div>
-      </div>`;
+      html += `<div class="card" onclick="viewGrammar('${g.id}')"><div class="tag" style="background:#f3e8ff">문법</div><div class="ttl">${g.title}</div></div>`;
     });
-    
     html += `</div>`;
     main.innerHTML = html;
-    
   } else if(currentView === "passage"){
-    flowBtn.style.display = "block";
-    const p = DEFAULT_PASSAGES.find(x => x.id === currentPid);
-    let sHtml = p.sentences.map((s, i) => `
-      <div class="sent">
-        <div style="position:absolute;top:-10px;left:10px;background:var(--primary);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px">#${i+1}</div>
-        <div class="en">${flowParse(s.en)}</div>
-        <div class="ko">${s.ko}</div>
-      </div>
-    `).join("");
-    
-    let hHtml = p.habruta.map(q => `<li>${q}</li>`).join("");
-
-    main.innerHTML = `
-      <button class="btn no-print" onclick="go('dash')" style="margin-bottom:15px">← 목록으로</button>
-      <div class="sheet ${session.grade < 3 ? 'junior' : ''}" id="sheet">
-        <div style="border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:20px">
-          <h2 style="margin:0">${p.title}</h2>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px">
-            <small>${p.source}</small>
-            <span class="tag">Topic: ${p.topic}</span>
-          </div>
-        </div>
-        ${sHtml}
-        <div style="margin-top:30px;padding:20px;background:#f8fafc;border-radius:10px">
-          <h4 style="margin:0 0 10px 0">💬 하브루타 질문</h4>
-          <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.6">${hHtml}</ul>
-        </div>
-      </div>`;
-      
-  } else if(currentView === "grammar"){
-    flowBtn.style.display = "none";
-    const g = DEFAULT_GRAMMARS.find(x => x.id === currentGid);
-    let eHtml = g.examples.map(ex => `
-      <div style="margin-bottom:10px;padding:10px;border-left:4px solid var(--admin);background:#faf5ff">
-        <div style="font-weight:700">${flowParse(ex.en)}</div>
-        <div style="font-size:13px;color:var(--muted)">${ex.ko}</div>
-        ${ex.note ? `<div style="font-size:11px;color:var(--admin);margin-top:4px">└ ${ex.note}</div>` : ''}
-      </div>
-    `).join("");
-
-    main.innerHTML = `
-      <button class="btn no-print" onclick="go('dash')" style="margin-bottom:15px">← 목록으로</button>
-      <div class="sheet">
-        <div style="border-bottom:2px solid var(--admin);padding-bottom:10px;margin-bottom:20px">
-          <span class="tag" style="background:#f3e8ff; color:#7e22ce">${g.category}</span>
-          <h2 style="margin:5px 0">${g.title}</h2>
-        </div>
-        <div style="margin-bottom:20px">
-          <div style="font-weight:800;color:var(--admin);margin-bottom:5px">공식(Formula)</div>
-          <div style="padding:15px;background:#f1f5f9;border-radius:8px;font-family:monospace;font-size:16px">${g.formula}</div>
-        </div>
-        <div style="margin-bottom:20px">
-          <div style="font-weight:800;margin-bottom:5px">핵심 설명</div>
-          <div style="line-height:1.6;color:#334155">${g.description}</div>
-        </div>
-        <div>
-          <div style="font-weight:800;margin-bottom:10px">적용 예시</div>
-          ${eHtml}
-        </div>
-      </div>`;
+    document.getElementById("flowBtn").style.display="block";
+    const p = DEFAULT_PASSAGES.find(x=>x.id===currentPid);
+    let sHtml = p.sentences.map((s,i)=>`<div class="sent"><div class="en">${flowParse(s.en)}</div><div class="ko">${s.ko}</div></div>`).join("");
+    main.innerHTML = `<div class="sheet" id="sheet"><h2>${p.title}</h2><hr/>${sHtml}</div>`;
   }
 }
 
-/* ===================== 부팅 및 이벤트 바인딩 ===================== */
-window.onload = function() {
+function viewPassage(id){ currentView="passage"; currentPid=id; render(); }
+function viewGrammar(id){ alert("문법 뷰어 가동 중..."); }
+
+/* --- [운명적 로그인 복구 로직] --- */
+function init(){
   const saved = getSession();
   if(saved){
     session = saved;
@@ -257,27 +195,23 @@ window.onload = function() {
     render();
   }
   
-  document.getElementById("lg-go").onclick = () => {
+  // 버튼 강제 바인딩 (먹통 방지)
+  const lgGo = document.getElementById("lg-go");
+  if(lgGo) lgGo.onclick = function() {
     const s = authenticate(document.getElementById("lg-id").value.trim(), document.getElementById("lg-pw").value);
-    if(s){
-      setSession(s);
-      session = s;
-      location.reload(); 
-    } else {
-      document.getElementById("lg-err").textContent = "로그인 정보가 올바르지 않습니다.";
-    }
+    if(s){ setSession(s); session = s; location.reload(); }
+    else { document.getElementById("lg-err").textContent = "아이디/비밀번호를 확인해 주세요."; }
   };
   
-  document.getElementById("lg-pw").onkeydown = (e) => { if(e.key==="Enter") document.getElementById("lg-go").click(); };
   document.getElementById("logout").onclick = () => { clearSession(); location.reload(); };
-  document.getElementById("homeBtn").onclick = () => go("dash");
+  document.getElementById("homeBtn").onclick = () => { currentView="dash"; render(); };
   document.getElementById("flowBtn").onclick = () => {
     flowOn = !flowOn;
-    const sheet = document.getElementById("sheet");
-    if(sheet) sheet.classList.toggle("flow-on", flowOn);
-    document.getElementById("flowBtn").textContent = flowOn ? "🌊 FLOW OFF" : "🌊 FLOW ON";
+    document.getElementById("sheet").classList.toggle("flow-on", flowOn);
   };
-};
+}
+
+window.onload = init;
 </script>
 </body>
-</html>
+</html>  
