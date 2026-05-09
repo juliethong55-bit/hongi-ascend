@@ -1,174 +1,434 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8" />
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Hongi Ascend High-Master v1.0 · Single File</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<title>Hongi Ascend High-Master v1.0 · Seneca</title>
 <style>
   :root{
-    --pri:#3182F6; --pri-soft:#EAF2FF; --bd:#E5E7EB; --mut:#6B7280; --bg:#F8FAFC; --fg:#0F172A;
-    --f1:#FCE7A0; --f2:#BFEBD2; --f3:#FBCAB7; --f4:#DCC9F2; --f5:#B7DCF2;
+    --bg:#f5f7fb; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --primary:#1d4ed8; --primary-ink:#ffffff;
+    --f1:#fde68a; --f2:#bbf7d0; --f3:#bfdbfe; --f4:#fbcfe8; --f5:#ddd6fe;
   }
-  @page { size: A4; margin: 15mm; }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;font-family:'Noto Sans KR',ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased}
-  .topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd)}
-  .topbar-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:12px 24px;gap:12px}
-  .brandbox{display:flex;align-items:center;gap:12px}
-  .logo{width:36px;height:36px;border-radius:12px;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;cursor:pointer;user-select:none}
-  .brand-title{font-size:14px;font-weight:900;letter-spacing:-.01em}
-  .brand-sub{font-size:11px;color:var(--mut);margin-top:-2px}
-  .actions{display:flex;gap:10px;align-items:center}
-  .btn{border-radius:999px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;border:1px solid var(--bd);background:#fff;color:var(--mut);transition:all .15s}
-  .btn:hover{border-color:rgba(49,130,246,.4)}
-  .btn.primary{background:var(--pri);color:#fff;border-color:var(--pri)}
-  .btn.toggle.on{background:var(--pri);color:#fff;border-color:var(--pri)}
-  main{padding:32px 16px}
-  .stack{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:32px}
-  .sheet{width:180mm;background:#fff;border:1px solid var(--bd);border-radius:18px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative}
-  .sheet header{border-bottom:2px solid var(--pri);padding-bottom:14px;margin-bottom:20px}
-  .brand{font-size:11px;font-weight:900;color:var(--pri);letter-spacing:.18em}
-  h1{font-size:22px;margin:6px 0 4px;font-weight:900;display:flex;align-items:center;gap:8px}
-  h1 .no{display:inline-flex;width:32px;height:32px;border-radius:8px;background:var(--pri);color:#fff;align-items:center;justify-content:center;font-size:14px}
-  .meta{font-size:11px;color:var(--mut);margin-top:4px}
-  .sheet header p{font-size:13px;color:var(--mut);margin:6px 0 0;line-height:1.6}
-  .sheet header p b{color:var(--fg);margin-right:6px}
-  .sentence{display:flex;gap:12px;margin:18px 0}
-  .sent-num{flex:none;width:26px;height:26px;border-radius:6px;background:var(--pri-soft);color:var(--pri);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px;margin-top:2px}
-  .sent-body{flex:1;min-width:0}
-  .en{font-size:15.5px;line-height:1.85;margin:0;color:var(--fg)}
-  .ko{font-size:13px;color:var(--mut);margin:4px 0 0;line-height:1.6}
-  table.vocab{width:100%;border-collapse:collapse;margin-top:12px;font-size:12.5px;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
-  table.vocab th{background:#F1F5F9;text-align:left;padding:6px 8px;font-weight:800}
-  table.vocab td{padding:6px 8px;border-top:1px solid var(--bd);vertical-align:top}
-  table.vocab tr:nth-child(even) td{background:#FAFBFC}
-  .w{color:var(--pri);font-weight:800} .pos{color:var(--mut);font-style:italic}
-  section.habruta,section.blanks,section.variants{margin-top:22px}
-  section.habruta{background:var(--pri-soft);border-radius:14px;padding:18px}
-  section.habruta h2{color:var(--pri);font-size:15px;margin:0 0 10px;font-weight:900}
-  section.habruta ol{margin:0;padding-left:20px;font-size:13.5px;line-height:1.7}
-  section.blanks{border:2px dashed rgba(49,130,246,.4);border-radius:14px;padding:18px}
-  section.blanks h2,section.variants h2{font-size:15px;margin:0 0 10px;font-weight:900}
-  section.blanks ol{margin:0;padding-left:20px;font-size:13.5px;line-height:1.7}
-  .hint{font-size:11px;color:var(--mut);margin:2px 0 8px}
-  .variant{border:1px solid var(--bd);border-radius:12px;padding:14px;margin-top:12px}
-  .vhead{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13.5px}
-  .vtag{background:var(--pri);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800}
-  .choices{padding-left:22px;font-size:13px;line-height:1.7;margin:6px 0 0}
-  .choices li.correct{color:var(--pri);font-weight:800}
-  .rationale{font-size:11.5px;color:var(--mut);margin:8px 0 0}
-  footer{border-top:1px solid var(--bd);text-align:center;font-size:10px;color:var(--mut);padding-top:10px;margin-top:22px}
-  .flow-token{border-radius:4px;padding:1px 4px;font-weight:700;transition:background-color .4s ease,color .4s ease}
-  .flow-c1{background:var(--f1)} .flow-c2{background:var(--f2)} .flow-c3{background:var(--f3)} .flow-c4{background:var(--f4)} .flow-c5{background:var(--f5)}
-  body.flow-off .flow-token{background:transparent!important;font-weight:inherit;padding:0}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,sans-serif;}
+  button{font-family:inherit;cursor:pointer}
+  /* ===== Login ===== */
+  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#1e3a8a,#1d4ed8 60%,#0ea5e9);z-index:50}
+  #login .box{background:#fff;border-radius:20px;padding:36px 32px;width:360px;
+    box-shadow:0 30px 80px rgba(0,0,0,.3)}
+  #login h1{margin:0 0 4px;font-size:22px;letter-spacing:-.5px}
+  #login p.sub{margin:0 0 22px;color:var(--muted);font-size:13px}
+  #login label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  #login input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px}
+  #login input:focus{outline:none;border-color:var(--primary)}
+  #login button.go{margin-top:18px;width:100%;padding:12px;background:var(--primary);color:#fff;
+    border:0;border-radius:12px;font-weight:800;font-size:14px}
+  #login .err{color:#b91c1c;font-size:12px;margin-top:8px;min-height:16px}
+  #login .hint{margin-top:14px;font-size:11px;color:var(--muted);text-align:center}
+
+  /* ===== App shell ===== */
+  #app{display:none}
+  .topbar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);
+    padding:10px 20px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.3px}
+  .brand .h{width:32px;height:32px;border-radius:9px;background:var(--primary);color:#fff;
+    display:grid;place-items:center;font-weight:900;cursor:pointer;user-select:none}
+  .brand small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+  .spacer{flex:1}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700}
+  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn.warn{background:#f59e0b;color:#fff;border-color:#f59e0b}
+
+  .wrap{padding:24px;display:flex;justify-content:center}
+  .sheet{width:180mm;background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:14mm;box-shadow:0 10px 40px rgba(15,23,42,.06)}
+  .head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--ink);
+    padding-bottom:8px;margin-bottom:14px}
+  .head .t{font-size:18px;font-weight:900;letter-spacing:-.4px}
+  .head .s{font-size:11px;color:var(--muted)}
+  .meta{font-size:12px;color:var(--muted);margin-bottom:10px}
+  .thesis{background:#f1f5f9;border-left:4px solid var(--primary);padding:10px 12px;border-radius:8px;
+    font-size:13px;margin-bottom:14px}
+
+  .sent{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;position:relative}
+  .sent .no{position:absolute;top:-9px;left:10px;background:var(--primary);color:#fff;font-size:10px;
+    padding:1px 8px;border-radius:999px;font-weight:800}
+  .en{font-size:13.5px;line-height:1.7;margin:4px 0 4px}
+  .ko{font-size:12px;color:#334155;border-top:1px dashed var(--line);padding-top:6px}
+  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11px}
+  th,td{border:1px solid var(--line);padding:4px 6px;vertical-align:top;text-align:left}
+  th{background:#f8fafc;font-weight:700;color:#475569}
+
+  .flow-token{background:transparent;color:inherit;padding:0;border-radius:3px;transition:background .35s ease,color .35s ease}
+  .flow-on .flow-c1{background:var(--f1)}
+  .flow-on .flow-c2{background:var(--f2)}
+  .flow-on .flow-c3{background:var(--f3)}
+  .flow-on .flow-c4{background:var(--f4)}
+  .flow-on .flow-c5{background:var(--f5)}
+
+  .section{margin-top:16px;border-top:2px solid var(--ink);padding-top:10px}
+  .section h2{font-size:14px;margin:0 0 8px;letter-spacing:-.3px}
+  .hb li{font-size:12px;margin-bottom:4px;line-height:1.55}
+  .blank{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;margin:5px 0}
+  .blank input{padding:3px 8px;border:1px solid var(--line);border-radius:6px;font-size:12px;min-width:120px}
+  .blank .ans{display:none;color:#0f766e;font-weight:700}
+  .blank.show .ans{display:inline}
+  .var{border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:8px;font-size:12px}
+  .var .q{font-weight:700;margin-bottom:4px}
+  .var ol{margin:4px 0 4px 18px;padding:0}
+  .var .ans{font-size:11px;color:#0f766e;margin-top:4px}
+  .var .rat{font-size:11px;color:var(--muted);margin-top:2px}
+
+  /* ===== Print ===== */
+  @page{size:A4;margin:15mm}
   @media print{
-    html,body{background:#fff!important}
-    .no-print{display:none!important}
-    main{padding:0}.stack{gap:0}
-    .sheet{width:100%;border:none;box-shadow:none;border-radius:0;padding:0}
-    .sheet + .sheet{page-break-before:always}
-    .sentence,section.habruta,section.blanks,section.variants,.variant{page-break-inside:avoid}
+    body{background:#fff}
+    .no-print,.topbar{display:none !important}
+    .wrap{padding:0}
+    .sheet{width:auto;border:0;box-shadow:none;padding:0;border-radius:0}
+    .sent{break-inside:avoid}
   }
-</style></head><body>
-<header class="topbar no-print">
-  <div class="topbar-inner">
-    <div class="brandbox">
-      <div class="logo" id="logo" title="Admin (3-click)">H</div>
-      <div>
-        <div class="brand-title">Hongi Ascend High-Master v1.0</div>
-        <div class="brand-sub">홍이어쎈영어 · 고등독해 마스터 클리닉 · Single File Edition</div>
-      </div>
-    </div>
-    <div class="actions">
-      <button class="btn toggle on" id="flowBtn">● FLOW ON</button>
-      <button class="btn primary" onclick="window.print()">🖨 A4 PDF 출력</button>
-    </div>
+</style>
+</head>
+<body>
+
+<!-- ============== LOGIN ============== -->
+<div id="login">
+  <div class="box">
+    <h1>홍이어쎈영어 · Hongi Ascend</h1>
+    <p class="sub">High-Master v1.0 · 원장 전용 학습 콘솔</p>
+    <label>아이디</label>
+    <input id="lg-id" type="text" autocomplete="username" placeholder="hongi" />
+    <label>비밀번호</label>
+    <input id="lg-pw" type="password" autocomplete="current-password" placeholder="••••••" />
+    <button class="go" id="lg-go">로그인</button>
+    <div class="err" id="lg-err"></div>
+    <div class="hint">데모 계정 · ID: <b>hongi</b> / PW: <b>ascend</b></div>
   </div>
-</header>
-<main><div class="stack">
+</div>
 
-  <article class="sheet">
-    <header>
-      <div class="brand">HONGI ASCEND HIGH-MASTER v1.0 · 고등독해 마스터 클리닉</div>
-      <h1><span class="no">01</span>Seneca: The True Cost of Success</h1>
-      <div class="meta">Ryan Holiday / Seneca 인용 (확정 원문)</div>
-      <p><b>주제</b> 겉보기 성공의 진짜 가격은 자유의 상실이다.</p>
-      <p><b>요지</b> <mark class="flow-token flow-c1" data-flow-group="1">성공</mark>의 화려한 외양 뒤에는 <mark class="flow-token flow-c2" data-flow-group="2">강요된</mark> 행동과 <mark class="flow-token flow-c3" data-flow-group="3">자유의 상실</mark>이라는 <mark class="flow-token flow-c4" data-flow-group="4">숨겨진 대가</mark>가 존재한다.</p>
-    </header>
-    <section class="sentences">
-      <!-- 13개 문장: 영어 원문(FLOW 마크 적용) + 한글 직독직해 + Vocab 표 (powerful/rich/famous … hope 까지 모두 포함) -->
-      <!-- (생성된 파일에 13문장이 모두 들어 있습니다. 동일 패턴 반복) -->
-    </section>
-    <section class="habruta">
-      <h2>🗣 하브루타 메타인지 토론 · 5인 대화</h2>
-      <ol>
-        <li><b>Q1.</b> 필자는 왜 'powerful, rich, and famous'를 첫 문장에서 병치했는가? …</li>
-        <li><b>Q2.</b> 'Ignore the trappings ... Look instead at what they're forced to trade'의 명령형 두 문장은 어떤 사고 전환(reframing)을 강요하는가?</li>
-        <li><b>Q3.</b> 'Mostly? Freedom.' 짧은 문답형 구문의 수사적 효과는?</li>
-        <li><b>Q4.</b> Seneca의 "Slavery resides under marble and gold."에서 'marble and gold'와 'slavery'의 거리는 본문의 어느 표현들과 재진술 관계인가?</li>
-        <li><b>Q5.</b> 마지막 세 문장의 '질문-질문-답변' 구조가 강요하는 메타인지는?</li>
-      </ol>
-    </section>
-    <section class="blanks">
-      <h2>✍️ 빈칸 완성형 (Blank Test)</h2>
-      <ol>
-        <li><b>1)</b> Ignore the ____ of their success and what they're able to buy.<div class="hint">힌트: 겉치레/부속물 · 정답: <b>trappings</b></div></li>
-        <li><b>2)</b> Look instead at what they're forced to ____ in return.<div class="hint">힌트: 맞바꾸다 · 정답: <b>trade</b></div></li>
-        <li><b>3)</b> It will require—____—realizing they are unable to say what they actually think.<div class="hint">힌트: 필연적으로 · 정답: <b>inevitably</b></div></li>
-        <li><b>4)</b> Sure, it might pay well—but they haven't truly ____ the transaction.<div class="hint">힌트: 면밀히 살피다 · 정답: <b>examined</b></div></li>
-        <li><b>5)</b> As Seneca put it, "____ resides under marble and gold."<div class="hint">힌트: 노예 상태 · 정답: <b>Slavery</b></div></li>
-        <li><b>6)</b> Too many successful people are ____ in jails of their own making.<div class="hint">힌트: 죄수 · 정답: <b>prisoners</b></div></li>
-      </ol>
-    </section>
-    <section class="variants">
-      <h2>🎯 Paraphrasing 변형 문제 (수능 / 모의고사 유형)</h2>
-      <div class="variant">
-        <div class="vhead"><span class="vtag">주제</span> <b>윗글의 주제로 가장 적절한 것은?</b></div>
-        <ol class="choices">
-          <li>the moral superiority of wealthy elites</li>
-          <li class="correct">the hidden price the powerful pay in lost freedom</li>
-          <li>practical strategies for becoming rich and famous</li>
-          <li>why Seneca admired marble and gold</li>
-        </ol>
-        <p class="rationale"><b>해설</b> · 'forced to trade · cost · Freedom · Slavery · prisoners · jails of their own making'이 일관되게 '성공의 대가 = 자유의 상실'을 재진술 → ②</p>
+<!-- ============== APP ============== -->
+<div id="app">
+  <div class="topbar no-print">
+    <div class="brand">
+      <div class="h" id="logo" title="트리플 클릭 = Admin">H</div>
+      <div>홍이어쎈 Ascend
+        <small>High-Master v1.0 · A4 180mm · 15mm margin</small>
       </div>
-      <div class="variant">
-        <div class="vhead"><span class="vtag">제목</span> <b>윗글의 제목으로 가장 적절한 것은?</b></div>
-        <ol class="choices">
-          <li>Marble, Gold, and the Joy of Power</li>
-          <li class="correct">Prisoners in Jails of Their Own Making</li>
-          <li>Why Kissing Up Pays Off</li>
-          <li>Freedom Is Overrated</li>
-        </ol>
-        <p class="rationale"><b>해설</b> · 결론적 비유가 'prisoners in jails of their own making' → ②</p>
-      </div>
-      <div class="variant">
-        <div class="vhead"><span class="vtag">요약문</span> <b>Behind the trappings of success lies a (A)____ in which the powerful trade their (B)____ for marble and gold.</b></div>
-        <ol class="choices">
-          <li>(A) gift (B) ambition</li>
-          <li class="correct">(A) transaction (B) freedom</li>
-          <li>(A) celebration (B) wealth</li>
-          <li>(A) reward (B) suit</li>
-        </ol>
-        <p class="rationale"><b>해설</b> · 본문의 'transaction' + 'Mostly? Freedom.' + 'Slavery resides under marble and gold' 핵심어 그대로 재진술 → ②</p>
-      </div>
-    </section>
-    <footer>© 홍이어쎈영어 · 고등독해 마스터 클리닉 · Seneca: The True Cost of Success</footer>
-  </article>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="flowBtn">🌊 FLOW ON</button>
+    <button class="btn primary" onclick="window.print()">🖨 A4 인쇄</button>
+    <button class="btn warn" id="logout">로그아웃</button>
+  </div>
 
-</div></main>
+  <div class="wrap">
+    <div class="sheet" id="sheet"><!-- rendered by JS --></div>
+  </div>
+</div>
+
 <script>
-  const btn=document.getElementById('flowBtn');
-  btn.addEventListener('click',()=>{
-    const off=document.body.classList.toggle('flow-off');
-    btn.classList.toggle('on',!off);
-    btn.textContent = off ? '○ FLOW OFF' : '● FLOW ON';
+/* ===================== DATA (확정 원문 13문장) ===================== */
+const PASSAGE = {
+  no:1,
+  title:"Seneca: The True Cost of Success",
+  source:"Ryan Holiday / Seneca 인용 (확정 원문)",
+  topic:"겉보기 성공의 진짜 가격은 자유의 상실이다.",
+  thesis:"[[1|성공]]의 화려한 외양 뒤에는 [[2|강요된]] 행동과 [[3|자유의 상실]]이라는 [[4|숨겨진 대가]]가 존재한다.",
+  sentences:[
+    {
+      ko:"세상에서 가장 강력하고, 부유하며, 유명한 사람들 몇 명을 살펴보라.",
+      en:"Take a look at some of the most [[1|powerful]], [[1|rich]], and [[1|famous]] people in the world.",
+      vocab:[
+        ["powerful","adj.","강력한, 영향력 있는","influential, mighty, dominant","weak, powerless"],
+        ["rich","adj.","부유한","wealthy, affluent, well-off","poor, destitute"],
+        ["famous","adj.","유명한","renowned, celebrated, prominent","obscure, unknown"]
+      ]
+    },
+    {
+      ko:"그들의 성공이 가져다준 화려한 장식들과 그들이 살 수 있는 것들은 무시하라.",
+      en:"Ignore the [[1|trappings]] of their [[1|success]] and what they\u2019re able to buy.",
+      vocab:[
+        ["ignore","v.","무시하다","disregard, overlook, dismiss","notice, heed"],
+        ["trappings","n.(pl.)","겉치레, 부속물, 장식","ornaments, adornments, accoutrements","essentials, substance"],
+        ["success","n.","성공","achievement, triumph, prosperity","failure, defeat"]
+      ]
+    },
+    {
+      ko:"그 대신 그들이 그 대가로 어쩔 수 없이 내어주는 것을 보라 \u2014 성공이 그들에게 무엇을 치르게 했는지를 보라.",
+      en:"Look instead at what they\u2019re [[2|forced]] to [[4|trade in return]]\u2014look at what [[1|success]] has [[4|cost]] them.",
+      vocab:[
+        ["forced","adj.","강요된, 어쩔 수 없는","compelled, coerced, obliged","voluntary, willing"],
+        ["trade","v./n.","맞바꾸다, 거래(하다)","exchange, swap, barter","retain, keep"],
+        ["in return","phr.","그 대가로","in exchange, as a trade-off","for free, gratis"],
+        ["cost","v.","(대가를) 치르게 하다","exact, charge, deprive of","give, grant"]
+      ]
+    },
+    {
+      ko:"대개? 자유다. 그들의 일은 정장을 입을 것을 요구한다.",
+      en:"Mostly? [[3|Freedom]]. Their work [[2|demands]] they wear a suit.",
+      vocab:[
+        ["mostly","adv.","대개, 주로","primarily, largely, chiefly","rarely, seldom"],
+        ["freedom","n.","자유","liberty, autonomy, independence","slavery, bondage"],
+        ["demand","v.","요구하다","require, insist on, exact","offer, relinquish"],
+        ["suit","n.","정장","formal attire, business dress","casual wear"]
+      ]
+    },
+    {
+      ko:"그들의 성공은 어떤 파티에 참석하고, 좋아하지 않는 사람들에게 아부하는 일에 달려 있다.",
+      en:"Their [[1|success]] [[2|depends on]] attending certain parties, [[5|kissing up]] to people they don\u2019t like.",
+      vocab:[
+        ["depend on","phr.v.","~에 달려 있다, 좌우되다","rely on, hinge on, be contingent on","be independent of"],
+        ["attend","v.","참석하다","be present at, show up at","miss, skip"],
+        ["kiss up to","phr.v.","아부하다, 비위를 맞추다","flatter, fawn over, suck up to","snub, defy"],
+        ["certain","adj.","특정한, 어떤","particular, specific","any, random"]
+      ]
+    },
+    {
+      ko:"그것은 \u2014 필연적으로 \u2014 자신이 실제로 생각하는 것을 말할 수 없음을 깨닫게 만들 것이다.",
+      en:"It will [[2|require]]\u2014[[2|inevitably]]\u2014realizing they are [[3|unable to say what they actually think]].",
+      vocab:[
+        ["require","v.","요구하다, 필요로 하다","demand, necessitate, call for","exempt, dispense with"],
+        ["inevitably","adv.","필연적으로","unavoidably, inescapably, certainly","avoidably, possibly"],
+        ["realize","v.","깨닫다","recognize, grasp, perceive","ignore, miss"],
+        ["actually","adv.","실제로","in fact, in reality, genuinely","supposedly, ostensibly"]
+      ]
+    },
+    {
+      ko:"더 나쁜 것은, 그것은 그들이 다른 종류의 사람이 되거나 나쁜 짓을 하기를 요구한다는 것이다.",
+      en:"Worse, it [[2|demands]] that they [[5|become a different type of person]] or [[5|do bad things]].",
+      vocab:[
+        ["worse","adv./adj.","더 나쁘게(은)","more gravely, even more so","better"],
+        ["demand (that)","v.","~할 것을 요구하다","insist that, require that","permit, allow"],
+        ["type","n.","종류, 유형","kind, sort, category","\u2014"]
+      ]
+    },
+    {
+      ko:"물론, 그것은 보수가 좋을 수도 있다 \u2014 그러나 그들은 그 거래를 진정으로 따져본 적이 없다.",
+      en:"Sure, it might [[1|pay well]]\u2014but they haven\u2019t truly examined the [[4|transaction]].",
+      vocab:[
+        ["sure","adv.","물론, 분명히","certainly, indeed, granted","doubtfully"],
+        ["pay well","phr.","보수가 좋다","be lucrative, be remunerative","pay poorly"],
+        ["truly","adv.","진정으로","genuinely, sincerely, really","superficially, falsely"],
+        ["examine","v.","면밀히 살피다, 따져보다","scrutinize, inspect, investigate","overlook, ignore"],
+        ["transaction","n.","거래","exchange, deal, bargain","gift, donation"]
+      ]
+    },
+    {
+      ko:"세네카가 말했듯이, \u201C노예 상태는 대리석과 황금 아래에 거(居)한다.\u201D",
+      en:"As Seneca put it, \u201C[[3|Slavery]] resides under [[1|marble and gold]].\u201D",
+      vocab:[
+        ["put it","phr.","(말로) 표현하다","phrase it, express it, word it","\u2014"],
+        ["slavery","n.","노예 상태","bondage, servitude, enslavement","freedom, liberty"],
+        ["reside","v.","거(居)하다, 머무르다","dwell, lie, exist","depart, leave"],
+        ["marble and gold","phr.","대리석과 황금(부의 상징)","luxury, opulence, splendor","poverty, austerity"]
+      ]
+    },
+    {
+      ko:"너무 많은 성공한 사람들이 자기 스스로 만든 감옥의 죄수다.",
+      en:"Too many [[1|successful]] people are [[3|prisoners]] in [[3|jails]] of their own making.",
+      vocab:[
+        ["successful","adj.","성공한","accomplished, prosperous, thriving","unsuccessful, failed"],
+        ["prisoner","n.","죄수, 포로","captive, inmate, detainee","free person, liberator"],
+        ["jail","n.","감옥","prison, cell, dungeon","freedom, sanctuary"],
+        ["of one\u2019s own making","phr.","스스로 자초한","self-inflicted, self-imposed","imposed by others"]
+      ]
+    },
+    {
+      ko:"그것이 네가 원하는 것인가?",
+      en:"Is that what you want?",
+      vocab:[["want","v.","원하다","desire, wish for, crave","reject, decline"]]
+    },
+    {
+      ko:"그것이 네가 그토록 열심히 노력해 향해 가고 있는 것인가?",
+      en:"Is that what you\u2019re working hard toward?",
+      vocab:[
+        ["work hard toward","phr.","~을 향해 열심히 노력하다","strive for, labor toward, push for","neglect, abandon"],
+        ["toward","prep.","~을 향해","in the direction of, in pursuit of","away from"]
+      ]
+    },
+    {
+      ko:"그렇지 않기를 바라자.",
+      en:"Let\u2019s hope not.",
+      vocab:[
+        ["hope","v./n.","바라다, 희망(하다)","wish, trust, anticipate","despair, dread"],
+        ["Let\u2019s ~","phr.","~하자(권유)","Shall we, We should","\u2014"]
+      ]
+    }
+  ],
+  habruta:[
+    "필자는 왜 \u2018powerful, rich, and famous\u2019를 첫 문장에서 병치했는가? 이 병치가 독자의 시선을 어디로 유도하려는 장치인지 토론하라.",
+    "\u2018Ignore the trappings ... Look instead at what they\u2019re forced to trade\u2019의 명령형 두 문장은 어떤 사고 전환(reframing)을 강요하는가?",
+    "\u2018Mostly? Freedom.\u2019이라는 짧은 문답형 구문이 글 전체에서 차지하는 수사적 효과는 무엇인가? 평서문으로 풀어 쓰면 어떤 힘이 사라지는가?",
+    "Seneca의 인용 \u201CSlavery resides under marble and gold.\u201D에서 \u2018marble and gold\u2019와 \u2018slavery\u2019의 거리(對比)는 본문의 어느 표현들과 재진술 관계를 이루는가?",
+    "마지막 세 문장(Is that what you want? / Is that what you\u2019re working hard toward? / Let\u2019s hope not.)이 \u2018질문-질문-답변\u2019 구조를 취한 이유는? 이 구조가 청중에게 강요하는 메타인지는 무엇인가?"
+  ],
+  blanks:[
+    ["Ignore the ____ of their success and what they\u2019re able to buy.","trappings","겉치레/부속물"],
+    ["Look instead at what they\u2019re forced to ____ in return.","trade","맞바꾸다"],
+    ["It will require\u2014____\u2014realizing they are unable to say what they actually think.","inevitably","필연적으로"],
+    ["Sure, it might pay well\u2014but they haven\u2019t truly ____ the transaction.","examined","면밀히 살피다"],
+    ["As Seneca put it, \u201C____ resides under marble and gold.\u201D","Slavery","노예 상태"],
+    ["Too many successful people are ____ in jails of their own making.","prisoners","죄수"]
+  ],
+  variants:[
+    {
+      type:"주제", q:"윗글의 주제로 가장 적절한 것은?",
+      choices:[
+        "the moral superiority of wealthy elites",
+        "the hidden price the powerful pay in lost freedom",
+        "practical strategies for becoming rich and famous",
+        "why Seneca admired marble and gold"
+      ],
+      answer:1,
+      rationale:"\u2018forced to trade \u00b7 cost \u00b7 Freedom \u00b7 Slavery \u00b7 prisoners \u00b7 jails of their own making\u2019이 일관되게 \u2018성공의 대가 = 자유의 상실\u2019을 재진술."
+    },
+    {
+      type:"제목", q:"윗글의 제목으로 가장 적절한 것은?",
+      choices:[
+        "Marble, Gold, and the Joy of Power",
+        "Prisoners in Jails of Their Own Making",
+        "Why Kissing Up Pays Off",
+        "Freedom Is Overrated"
+      ],
+      answer:1,
+      rationale:"끝에서 두 번째 문장 \u2018prisoners in jails of their own making\u2019이 글의 결론적 비유."
+    },
+    {
+      type:"요약문", q:"빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은? \u2014 Behind the trappings of success lies a (A)____ in which the powerful trade their (B)____ for marble and gold.",
+      choices:[
+        "(A) gift          (B) ambition",
+        "(A) transaction   (B) freedom",
+        "(A) celebration   (B) wealth",
+        "(A) reward        (B) suit"
+      ],
+      answer:1,
+      rationale:"본문 \u2018transaction\u2019 + \u2018Mostly? Freedom.\u2019 + \u2018Slavery resides under marble and gold\u2019의 핵심 어휘 변형."
+    }
+  ]
+};
+
+/* ===================== RENDER ===================== */
+function flowParse(str){
+  const re=/\[\[(\d+)\|([^\]]+)\]\]/g;
+  let out="",last=0,m;
+  while((m=re.exec(str))!==null){
+    out+=escapeHtml(str.slice(last,m.index));
+    out+=`<mark class="flow-token flow-c${m[1]}">${escapeHtml(m[2])}</mark>`;
+    last=m.index+m[0].length;
+  }
+  out+=escapeHtml(str.slice(last));
+  return out;
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function render(){
+  const p=PASSAGE;
+  const sentencesHtml = p.sentences.map((s,i)=>`
+    <div class="sent">
+      <span class="no">#${String(i+1).padStart(2,"0")}</span>
+      <div class="en">${flowParse(s.en)}</div>
+      <div class="ko">${escapeHtml(s.ko)}</div>
+      <table>
+        <thead><tr><th style="width:18%">Word</th><th style="width:8%">POS</th><th style="width:24%">뜻</th><th style="width:25%">Synonyms</th><th style="width:25%">Antonyms</th></tr></thead>
+        <tbody>${s.vocab.map(v=>`<tr><td><b>${escapeHtml(v[0])}</b></td><td>${escapeHtml(v[1])}</td><td>${escapeHtml(v[2])}</td><td>${escapeHtml(v[3])}</td><td>${escapeHtml(v[4])}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>`).join("");
+
+  const habrutaHtml = `<ol class="hb">${p.habruta.map(h=>`<li>${escapeHtml(h)}</li>`).join("")}</ol>`;
+
+  const blanksHtml = p.blanks.map((b,i)=>`
+    <div class="blank" data-i="${i}">
+      <span>${i+1}.</span>
+      <span>${escapeHtml(b[0]).replace("____",`<input data-ans="${escapeHtml(b[1])}" placeholder="(${escapeHtml(b[2])})"/>`)}</span>
+      <button class="btn" data-check="${i}">확인</button>
+      <span class="ans">정답: <b>${escapeHtml(b[1])}</b></span>
+    </div>`).join("");
+
+  const variantsHtml = p.variants.map((v,i)=>`
+    <div class="var">
+      <div class="q">[변형 ${i+1} · ${escapeHtml(v.type)}] ${escapeHtml(v.q)}</div>
+      <ol>${v.choices.map(c=>`<li>${escapeHtml(c)}</li>`).join("")}</ol>
+      <div class="ans">정답: ${v.answer+1}번</div>
+      <div class="rat">근거: ${escapeHtml(v.rationale)}</div>
+    </div>`).join("");
+
+  document.getElementById("sheet").innerHTML = `
+    <div class="head">
+      <div>
+        <div class="t">Hongi Ascend High-Master v1.0</div>
+        <div class="s">Passage #${String(p.no).padStart(2,"0")} · ${escapeHtml(p.title)}</div>
+      </div>
+      <div class="s">${escapeHtml(p.source)}</div>
+    </div>
+    <div class="meta">주제 · ${escapeHtml(p.topic)}</div>
+    <div class="thesis">${flowParse(p.thesis)}</div>
+
+    <div class="section"><h2>① 본문 정밀 분석 (FLOW · 직독직해 · Vocab Master)</h2>${sentencesHtml}</div>
+    <div class="section"><h2>② 하브루타 메타인지 토론 (5문항)</h2>${habrutaHtml}</div>
+    <div class="section"><h2>③ 빈칸 마스터 테스트</h2>${blanksHtml}</div>
+    <div class="section"><h2>④ 수능형 변형 문제 (Paraphrasing)</h2>${variantsHtml}</div>
+  `;
+
+  // blank check
+  document.querySelectorAll("[data-check]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const row=btn.closest(".blank");
+      const inp=row.querySelector("input");
+      const ok=(inp.value||"").trim().toLowerCase()===inp.dataset.ans.toLowerCase();
+      row.classList.add("show");
+      inp.style.borderColor = ok ? "#0f766e" : "#b91c1c";
+    });
   });
-  let n=0,t=0;
-  document.getElementById('logo').addEventListener('click',()=>{
-    const now=Date.now(); n=(now-t<600)?n+1:1; t=now;
-    if(n>=3){n=0;alert('Admin Mode: 본 단일 파일 빌드는 정적 배포용입니다. 데이터 편집은 풀버전(Lovable)에서 진행하세요.');}
+}
+
+/* ===================== FLOW toggle ===================== */
+let flowOn=false;
+function bindApp(){
+  document.getElementById("flowBtn").addEventListener("click",()=>{
+    flowOn=!flowOn;
+    document.getElementById("sheet").classList.toggle("flow-on",flowOn);
+    document.getElementById("flowBtn").textContent = flowOn ? "🌊 FLOW OFF" : "🌊 FLOW ON";
   });
+  document.getElementById("logout").addEventListener("click",()=>{
+    sessionStorage.removeItem("hongi.auth");
+    location.reload();
+  });
+  // hidden admin (triple-click)
+  let clicks=0,timer=null;
+  document.getElementById("logo").addEventListener("click",()=>{
+    clicks++;
+    clearTimeout(timer);
+    timer=setTimeout(()=>clicks=0,600);
+    if(clicks>=3){clicks=0;alert("🔐 Admin Mode: 데이터 편집은 PASSAGE 객체를 직접 수정하세요.");}
+  });
+}
+
+/* ===================== Login ===================== */
+function showApp(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+}
+function tryLogin(){
+  const id=document.getElementById("lg-id").value.trim();
+  const pw=document.getElementById("lg-pw").value;
+  if(id==="hongi" && pw==="ascend"){
+    sessionStorage.setItem("hongi.auth","1");
+    showApp();
+  }else{
+    document.getElementById("lg-err").textContent="아이디 또는 비밀번호가 올바르지 않습니다.";
+  }
+}
+document.getElementById("lg-go").addEventListener("click",tryLogin);
+document.getElementById("lg-pw").addEventListener("keydown",e=>{if(e.key==="Enter")tryLogin();});
+
+/* ===================== Boot ===================== */
+render();
+bindApp();
+if(sessionStorage.getItem("hongi.auth")==="1") showApp();
 </script>
-</body></html>
+</body>
+</html>
