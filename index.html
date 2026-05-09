@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>홍이어쎈 통합 포털 · Hongi Ascend High-Master v2.0</title>
+<title>홍이어쎈 통합 포털 · Hongi Ascend High-Master v3.0</title>
 <style>
   :root{
     --bg:#f5f7fb; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
@@ -132,6 +132,64 @@
     .sent{break-inside:avoid}
     .section{break-inside:avoid}
   }
+
+  /* ===== Tabs (admin) ===== */
+  .tabs{display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+  .tabs button{background:transparent;border:0;padding:8px 14px;font-weight:800;font-size:12px;color:var(--muted);
+    border-bottom:3px solid transparent;border-radius:0}
+  .tabs button.on{color:var(--admin);border-bottom-color:var(--admin)}
+  .pane{display:none}
+  .pane.on{display:block}
+
+  /* ===== Grammar card / sheet ===== */
+  .card.gram{border-left:4px solid #9333ea}
+  .card.gram .no{color:#9333ea}
+  .gram-tag{font-size:10px;background:#f3e8ff;color:#6b21a8;padding:2px 7px;border-radius:999px;font-weight:700}
+  .formula{background:#fef3c7;border-left:4px solid #f59e0b;border-radius:8px;padding:10px 12px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;margin:10px 0}
+  .gram-desc{font-size:13px;line-height:1.7;color:#1f2937;margin:8px 0 12px;white-space:pre-wrap}
+  .ex-block{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .ex-block .en{font-size:13.5px;font-weight:600;line-height:1.7}
+  .ex-block .ko{font-size:12px;color:#334155;border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}
+  .ex-block .note{font-size:11.5px;color:#6b21a8;margin-top:6px;line-height:1.6}
+  .ex-block mark.hl{background:#fef08a;padding:1px 4px;border-radius:4px;font-weight:700}
+  .pq{border:1px dashed var(--line);border-radius:8px;padding:8px 11px;margin-bottom:6px;font-size:12.5px;line-height:1.7}
+  .pq .a{display:none;color:#0f766e;font-weight:700;margin-top:4px}
+  .pq.show .a{display:block}
+
+  /* ===== JUNIOR HARNESS ===== */
+  .sheet.junior{font-size:110%}
+  .sheet.junior .en{font-size:15px;line-height:2.0}
+  .sheet.junior .ko{font-size:13.5px;line-height:1.9}
+  .sheet.junior .sent{padding:14px 16px;margin-bottom:14px;border-width:2px}
+  .sheet.junior .gram-desc{font-size:14.5px;line-height:2.0}
+  .sheet.junior .formula{font-size:14.5px;padding:14px}
+  .sheet.junior .section h2{font-size:15.5px}
+  .sheet.junior table{font-size:12.5px}
+  .sheet.junior th,.sheet.junior td{padding:6px 8px}
+  .junior-banner{background:#fff7ed;border:1px solid #fdba74;color:#9a3412;font-size:12px;
+    padding:6px 10px;border-radius:8px;margin-bottom:10px;font-weight:700}
+  .memo-box{border:1px dashed #94a3b8;border-radius:8px;height:60px;margin-top:6px;
+    background:repeating-linear-gradient(transparent,transparent 19px,#e2e8f0 20px);
+    position:relative}
+  .memo-box::before{content:"📝 메모";position:absolute;top:-9px;left:10px;background:#fff;
+    padding:0 6px;font-size:10px;color:#64748b;font-weight:700}
+
+  /* highlighter toolbar */
+  .hl-tools{display:flex;gap:6px;align-items:center;margin:6px 0 10px;flex-wrap:wrap}
+  .hl-tools .pen{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;background:#fff}
+  .hl-tools .pen.on{outline:3px solid #fde68a}
+  .hl-target mark.user-hl{background:#fef08a;border-radius:3px;padding:0 2px}
+  .hl-target mark.user-hl.green{background:#bbf7d0}
+  .hl-target mark.user-hl.pink{background:#fbcfe8}
+
+  @media print{
+    .sheet.junior{font-size:115%}
+    .sheet.junior .sent{break-inside:avoid;margin-bottom:18px}
+    .memo-box{height:80px}
+    .tabs,.hl-tools{display:none !important}
+  }
+
 </style>
 </head>
 <body>
@@ -140,7 +198,7 @@
 <div id="login">
   <div class="box">
     <h1>홍이어쎈 통합 포털</h1>
-    <p class="sub">Hongi Ascend High-Master v2.0 · 원장/학생 통합 인증</p>
+    <p class="sub">Hongi Ascend High-Master v3.0 · 원장/학생 통합 인증</p>
     <label>아이디</label>
     <input id="lg-id" type="text" autocomplete="username" placeholder="admin / 학번 8자리" />
     <label>비밀번호</label>
@@ -297,7 +355,7 @@ const DEFAULT_PASSAGES = [
 ];
 
 /* ===================== STORE (localStorage) ===================== */
-const LS_KEY = "hongi.passages.v2";
+const LS_KEY = "hongi.passages.v3";
 function loadPassages(){
   try{
     const raw = localStorage.getItem(LS_KEY);
@@ -315,8 +373,90 @@ function loadExtraPassages(){
   }catch(e){ return []; }
 }
 
+
+/* ===================== DEFAULT GRAMMARS ===================== */
+const DEFAULT_GRAMMARS = [
+{
+  id:"g1", no:1,
+  category:"시제",
+  title:"현재완료(have p.p.) 4용법",
+  formula:"have/has + p.p.  →  ① 완료 ② 경험 ③ 계속 ④ 결과",
+  description:"과거의 사건을 ‘지금’과 연결해 말할 때 쓴다.\n· 완료(just/already/yet)  · 경험(ever/never/before)\n· 계속(for/since)  · 결과(현재 상태가 남아 있음)",
+  targetTags:["ALL"],
+  examples:[
+    {en:"I [[have just finished]] my homework.", ko:"나는 막 숙제를 끝냈다.", note:"완료용법 — just가 단서"},
+    {en:"She [[has never been]] to Paris.", ko:"그녀는 파리에 가본 적이 없다.", note:"경험용법 — never/ever"},
+    {en:"We [[have lived]] here [[for]] ten years.", ko:"우리는 여기 10년째 살고 있다.", note:"계속용법 — for/since"},
+    {en:"He [[has lost]] his key.", ko:"그는 열쇠를 잃어버렸다(지금도 없음).", note:"결과용법 — 현재 상태"}
+  ],
+  practice:[
+    {q:"I (live / have lived) in Seoul since 2015.", a:"have lived", why:"since + 시점 → 현재완료 계속"},
+    {q:"He (went / has gone) to school an hour ago.", a:"went", why:"ago는 명백한 과거 → 단순과거"}
+  ]
+},
+{
+  id:"g2", no:2,
+  category:"준동사",
+  title:"동명사 vs to부정사 (목적어 선택)",
+  formula:"enjoy/finish/avoid/mind + V-ing   |   want/decide/hope/plan + to V",
+  description:"동사에 따라 목적어로 동명사만 / to부정사만 / 둘 다(의미 차이) 받는 경우가 있다.",
+  targetTags:["중1","중2","중3","ALL"],
+  examples:[
+    {en:"I [[enjoy reading]] novels.", ko:"나는 소설 읽는 것을 즐긴다.", note:"enjoy + V-ing"},
+    {en:"She [[decided to study]] abroad.", ko:"그녀는 유학 가기로 결심했다.", note:"decide + to V"},
+    {en:"He [[stopped smoking]] last year.", ko:"그는 작년에 담배를 끊었다.", note:"stop + V-ing = ~하던 것을 멈추다"},
+    {en:"He [[stopped to smoke]].", ko:"그는 담배를 피우려고 멈췄다.", note:"stop + to V = ~하기 위해 멈추다 (부사적)"}
+  ],
+  practice:[
+    {q:"Would you mind (open / opening) the window?", a:"opening", why:"mind + V-ing"},
+    {q:"They hope (to win / winning) the game.", a:"to win", why:"hope + to V"}
+  ]
+},
+{
+  id:"g3", no:3,
+  category:"관계사",
+  title:"관계대명사 who / which / that",
+  formula:"선행사(사람)+who  |  선행사(사물)+which  |  공통+that  (콤마 뒤 that 불가)",
+  description:"두 문장을 하나로 합칠 때 공통 명사를 대신하는 대명사이자 접속사 역할을 한다.",
+  targetTags:["중2","중3","ALL"],
+  examples:[
+    {en:"I have a friend [[who lives]] in Busan.", ko:"나는 부산에 사는 친구가 있다.", note:"선행사 friend(사람)"},
+    {en:"This is the book [[which I bought]] yesterday.", ko:"이것이 내가 어제 산 책이다.", note:"선행사 book(사물), 목적격"},
+    {en:"The man and his dog [[that]] are running are mine.", ko:"달리고 있는 그 남자와 그의 개는 내 것이다.", note:"사람+사물 동시 → that"}
+  ],
+  practice:[
+    {q:"I know a boy ___ can speak five languages.", a:"who", why:"선행사 boy(사람) + 주격"},
+    {q:"The car ___ he drives is red.", a:"which/that", why:"선행사 car(사물) + 목적격"}
+  ]
+}
+];
+const LS_GR_KEY = "hongi.grammars.v3";
+function loadGrammars(){
+  try{
+    const raw = localStorage.getItem(LS_GR_KEY);
+    const extra = raw ? JSON.parse(raw) : [];
+    return [...DEFAULT_GRAMMARS, ...(Array.isArray(extra)?extra:[])];
+  }catch(e){ return [...DEFAULT_GRAMMARS]; }
+}
+function loadExtraGrammars(){
+  try{ const raw=localStorage.getItem(LS_GR_KEY); return raw?(JSON.parse(raw)||[]):[]; }catch(e){return[];}
+}
+function saveExtraGrammars(extra){ localStorage.setItem(LS_GR_KEY, JSON.stringify(extra)); }
+
+/* ===== junior detection ===== */
+function isJuniorTags(tags){
+  const arr = tags||[];
+  return arr.some(t=> /^중[123]$/.test(t));
+}
+function isJuniorSession(s){
+  if(!s || s.role!=="student") return false;
+  // grade "1"/"2"/"3" of school code 99 reserved 또는 명시적 중등 코드 가능
+  // 데모: 학교코드가 "10","11","12" 또는 학번 prefix가 'M' 시작이면 junior
+  return /^(1[0-2])$/.test(s.school);
+}
+
 /* ===================== AUTH ===================== */
-const SS_KEY = "hongi.session.v2";
+const SS_KEY = "hongi.session.v3";
 function parseStudentId(id){
   // 8자리 숫자: 학교(2)+학년(1)+번호(5)
   if(!/^\d{8}$/.test(id)) return null;
@@ -327,7 +467,7 @@ function parseStudentId(id){
     role:"student",
     id, school, grade, serial,
     schoolName: SCHOOLS[school] || `학교${school}`,
-    tags: ["ALL", `S${school}`, `S${school}-G${grade}`]
+    tags: ["ALL", `S${school}`, `S${school}-G${grade}`, ...(/^(1[0-2])$/.test(school)?["중"+grade]:[])]
   };
 }
 function authenticate(id, pw){
@@ -388,6 +528,8 @@ function go(view, pid){
 function renderDashboard(){
   const all = loadPassages();
   const list = visiblePassages(session, all);
+  const grAll = loadGrammars();
+  const grList = visiblePassages(session, grAll);
 
   const isAdmin = session.role === "admin";
   const adminHtml = isAdmin ? renderAdminPanel() : "";
@@ -405,84 +547,185 @@ function renderDashboard(){
     </div>`;
   }).join("");
 
-  const empty = list.length===0
-    ? `<div class="empty">📭 현재 학생(${escapeHtml(session.schoolName||"")} ${escapeHtml(session.grade||"")}학년)에게 배정된 지문이 없습니다.</div>`
-    : "";
+  const grCards = grList.map(g=>{
+    const tags = (g.targetTags||["ALL"]).map(t=>{
+      const cls = t==="ALL" ? "tag all" : "tag";
+      return `<span class="${cls}">${escapeHtml(t)}</span>`;
+    }).join("");
+    return `<div class="card gram" data-gid="${escapeHtml(g.id)}">
+      <div class="no">Grammar #${String(g.no||"").padStart(2,"0")} · <span class="gram-tag">${escapeHtml(g.category||"문법")}</span></div>
+      <div class="ttl">${escapeHtml(g.title)}</div>
+      <div class="topic">${escapeHtml(g.formula||"")}</div>
+      <div class="tags">${tags}</div>
+    </div>`;
+  }).join("");
+
+  const empty1 = list.length===0
+    ? `<div class="empty">📭 배정된 독해 지문이 없습니다.</div>` : "";
+  const empty2 = grList.length===0
+    ? `<div class="empty">📭 배정된 문법 단원이 없습니다.</div>` : "";
 
   document.getElementById("main").innerHTML = `
     ${adminHtml}
     <div class="dash-head">
-      <h2>${isAdmin?"📚 전체 콘텐츠":"📖 내 학습"}</h2>
-      <span class="sub">${list.length}개 지문 · ${isAdmin?"원장 권한":`${escapeHtml(session.schoolName)} ${escapeHtml(session.grade)}학년`}</span>
+      <h2>${isAdmin?"📚 독해 지문":"📖 내 독해"}</h2>
+      <span class="sub">${list.length}개 · ${isAdmin?"원장 권한":`${escapeHtml(session.schoolName)} ${escapeHtml(session.grade)}학년`}</span>
     </div>
-    ${empty}
+    ${empty1}
     <div class="grid">${cards}</div>
+
+    <div class="dash-head" style="margin-top:22px">
+      <h2>${isAdmin?"🧩 문법 단원":"🧩 내 문법"}</h2>
+      <span class="sub">${grList.length}개</span>
+    </div>
+    ${empty2}
+    <div class="grid">${grCards}</div>
   `;
 
   document.querySelectorAll(".card[data-pid]").forEach(el=>{
     el.addEventListener("click",()=> go("passage", el.dataset.pid));
   });
+  document.querySelectorAll(".card[data-gid]").forEach(el=>{
+    el.addEventListener("click",()=> go("grammar", el.dataset.gid));
+  });
   if(isAdmin) bindAdminPanel();
-  // toolbar buttons
   document.getElementById("flowBtn").style.display="none";
   document.getElementById("printBtn").style.display="none";
   document.getElementById("homeBtn").style.display="none";
 }
 
 function renderAdminPanel(){
+  const exP = loadExtraPassages().length, exG = loadExtraGrammars().length;
   return `
   <div class="admin-panel">
     <h3>🔐 Content Manager (원장 전용)</h3>
-    <div class="ph">새 지문을 추가합니다. 입력 후 [추가] 버튼 → localStorage 저장 → 즉시 목록 반영.</div>
-    <div class="row">
-      <div><label>제목</label><input id="cm-title" placeholder="예: Orwell - On Power" /></div>
-      <div><label>출처</label><input id="cm-source" placeholder="예: 1984 발췌" /></div>
+    <div class="ph">독해 지문과 문법 개념을 직접 추가합니다. localStorage 즉시 저장 · 새로고침 후에도 유지.</div>
+    <div class="tabs">
+      <button class="tab-btn on" data-tab="tab-p">📖 독해 지문 관리 (${exP})</button>
+      <button class="tab-btn"    data-tab="tab-g">🧩 문법 개념 관리 (${exG})</button>
     </div>
-    <div class="row">
-      <div><label>주제(한글 한줄)</label><input id="cm-topic" placeholder="권력은 그 자체가 목적이다." /></div>
-      <div><label>대상 태그(쉼표) — ALL / S01 / S01-G2 등</label><input id="cm-tags" placeholder="S01-G2, S02-G3" /></div>
+
+    <div class="pane on" id="tab-p">
+      <div class="row">
+        <div><label>제목</label><input id="cm-title" placeholder="예: Orwell - On Power" /></div>
+        <div><label>출처</label><input id="cm-source" placeholder="예: 1984 발췌" /></div>
+      </div>
+      <div class="row">
+        <div><label>주제(한글 한줄)</label><input id="cm-topic" placeholder="권력은 그 자체가 목적이다." /></div>
+        <div><label>대상 태그(쉼표) — ALL / S01 / S01-G2 / 중1·중2·중3</label><input id="cm-tags" placeholder="S01-G2, 중3" /></div>
+      </div>
+      <label>본문 영문 (한 줄에 한 문장, [[그룹|단어]] 마크업 가능)</label>
+      <textarea id="cm-en" placeholder="Power is not a means; it is an [[1|end]]."></textarea>
+      <label>직독직해 (영문과 같은 줄 수)</label>
+      <textarea id="cm-ko" placeholder="권력은 수단이 아니라 목적이다."></textarea>
+      <div class="actions">
+        <button class="btn admin" id="cm-add">+ 지문 추가</button>
+        <button class="btn" id="cm-clear">추가분 전체 삭제</button>
+        <span class="msg" id="cm-msg">현재 추가분: <b>${exP}</b>개</span>
+      </div>
     </div>
-    <label>본문 영문 (한 줄에 한 문장, [[그룹|단어]] 마크업 가능)</label>
-    <textarea id="cm-en" placeholder="Power is not a means; it is an [[1|end]].&#10;One does not establish a [[2|dictatorship]] in order to safeguard a revolution."></textarea>
-    <label>직독직해 (영문과 같은 줄 수, 한 줄에 한 문장)</label>
-    <textarea id="cm-ko" placeholder="권력은 수단이 아니라 목적이다.&#10;혁명을 지키기 위해 독재를 세우는 것이 아니다."></textarea>
-    <div class="actions">
-      <button class="btn admin" id="cm-add">+ 지문 추가</button>
-      <button class="btn" id="cm-clear">localStorage 추가분 전체 삭제</button>
-      <span class="msg" id="cm-msg">현재 추가분: <b>${loadExtraPassages().length}</b>개</span>
+
+    <div class="pane" id="tab-g">
+      <div class="row">
+        <div><label>카테고리 (품사/시제/관계사 등)</label><input id="gm-cat" placeholder="시제" /></div>
+        <div><label>단원 제목</label><input id="gm-title" placeholder="현재완료 4용법" /></div>
+      </div>
+      <div class="row">
+        <div><label>핵심 공식</label><input id="gm-formula" placeholder="have/has + p.p. → 완료/경험/계속/결과" /></div>
+        <div><label>대상 태그(쉼표) — ALL / 중1 / 중2 / 중3 / S01-G2</label><input id="gm-tags" placeholder="중2, 중3" /></div>
+      </div>
+      <label>상세 설명 (줄바꿈 허용)</label>
+      <textarea id="gm-desc" placeholder="과거의 사건을 ‘지금’과 연결해 말할 때 사용..."></textarea>
+      <label>예문 분석 — 한 줄에 한 예문 · 형식: <code>EN | 해석 | 설명</code> · 강조는 [[단어]]</label>
+      <textarea id="gm-ex" placeholder="I [[have just finished]] my homework. | 나는 막 숙제를 끝냈다. | 완료용법 — just"></textarea>
+      <label>연습문제 — 한 줄에 한 문항 · 형식: <code>문제 | 정답 | 해설</code></label>
+      <textarea id="gm-pr" placeholder="I (live / have lived) in Seoul since 2015. | have lived | since+시점→현재완료"></textarea>
+      <div class="actions">
+        <button class="btn admin" id="gm-add">+ 문법 추가</button>
+        <button class="btn" id="gm-clear">추가분 전체 삭제</button>
+        <span class="msg" id="gm-msg">현재 추가분: <b>${exG}</b>개</span>
+      </div>
     </div>
   </div>`;
 }
 
 function bindAdminPanel(){
+  // tabs
+  document.querySelectorAll(".admin-panel .tab-btn").forEach(b=>{
+    b.addEventListener("click",()=>{
+      document.querySelectorAll(".admin-panel .tab-btn").forEach(x=>x.classList.remove("on"));
+      document.querySelectorAll(".admin-panel .pane").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      document.getElementById(b.dataset.tab).classList.add("on");
+    });
+  });
+  function v(id){ return (document.getElementById(id).value||"").trim(); }
+
+  // ----- 독해 -----
   document.getElementById("cm-add").addEventListener("click",()=>{
     const title=v("cm-title"), source=v("cm-source"), topic=v("cm-topic"),
           tagsRaw=v("cm-tags"), en=v("cm-en"), ko=v("cm-ko");
     const msg=document.getElementById("cm-msg");
     if(!title || !en){ msg.className="msg err"; msg.textContent="제목과 본문은 필수입니다."; return; }
-    const enLines = en.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-    const koLines = ko.split(/\r?\n/).map(s=>s.trim());
+    const enLines = en.split(/
+?
+/).map(s=>s.trim()).filter(Boolean);
+    const koLines = ko.split(/
+?
+/).map(s=>s.trim());
     const sentences = enLines.map((line,i)=>({en:line, ko:koLines[i]||"", vocab:[]}));
     const tags = (tagsRaw||"ALL").split(",").map(s=>s.trim()).filter(Boolean);
     const extra = loadExtraPassages();
-    const newP = {
+    extra.push({
       id:"u"+Date.now(),
       no: DEFAULT_PASSAGES.length + extra.length + 1,
       title, source, topic, targetTags: tags.length?tags:["ALL"],
-      thesis: topic || "",
-      sentences, habruta:[], blanks:[], variants:[]
-    };
-    extra.push(newP);
+      thesis: topic||"", sentences, habruta:[], blanks:[], variants:[]
+    });
     saveExtraPassages(extra);
     msg.className="msg ok"; msg.textContent=`✓ 추가됨. 현재 추가분: ${extra.length}개`;
-    setTimeout(()=>render(), 400);
+    setTimeout(()=>render(),400);
   });
   document.getElementById("cm-clear").addEventListener("click",()=>{
     if(!confirm("localStorage에 추가된 지문을 모두 삭제할까요?")) return;
-    saveExtraPassages([]);
-    render();
+    saveExtraPassages([]); render();
   });
-  function v(id){ return (document.getElementById(id).value||"").trim(); }
+
+  // ----- 문법 -----
+  document.getElementById("gm-add").addEventListener("click",()=>{
+    const cat=v("gm-cat"), title=v("gm-title"), formula=v("gm-formula"),
+          tagsRaw=v("gm-tags"), desc=v("gm-desc"), exRaw=v("gm-ex"), prRaw=v("gm-pr");
+    const msg=document.getElementById("gm-msg");
+    if(!title){ msg.className="msg err"; msg.textContent="단원 제목은 필수입니다."; return; }
+    const examples = exRaw.split(/
+?
+/).map(s=>s.trim()).filter(Boolean).map(line=>{
+      const [en, ko, note] = line.split("|").map(x=>(x||"").trim());
+      return {en:en||"", ko:ko||"", note:note||""};
+    });
+    const practice = prRaw.split(/
+?
+/).map(s=>s.trim()).filter(Boolean).map(line=>{
+      const [q,a,why] = line.split("|").map(x=>(x||"").trim());
+      return {q:q||"", a:a||"", why:why||""};
+    });
+    const tags = (tagsRaw||"ALL").split(",").map(s=>s.trim()).filter(Boolean);
+    const extra = loadExtraGrammars();
+    extra.push({
+      id:"ug"+Date.now(),
+      no: DEFAULT_GRAMMARS.length + extra.length + 1,
+      category:cat||"기타", title, formula:formula||"",
+      description:desc||"", targetTags: tags.length?tags:["ALL"],
+      examples, practice
+    });
+    saveExtraGrammars(extra);
+    msg.className="msg ok"; msg.textContent=`✓ 추가됨. 현재 추가분: ${extra.length}개`;
+    setTimeout(()=>render(),400);
+  });
+  document.getElementById("gm-clear").addEventListener("click",()=>{
+    if(!confirm("localStorage에 추가된 문법 단원을 모두 삭제할까요?")) return;
+    saveExtraGrammars([]); render();
+  });
 }
 
 /* ===================== RENDER: passage ===================== */
@@ -526,10 +769,10 @@ function renderPassage(){
 
   document.getElementById("main").innerHTML = `
     <button class="btn back-btn no-print" id="backBtn">← 목록으로</button>
-    <div class="sheet" id="sheet">
+    <div class="sheet ${(isJuniorTags(p.targetTags)||isJuniorSession(session))?"junior":""}" id="sheet">
       <div class="head">
         <div>
-          <div class="t">Hongi Ascend High-Master v2.0</div>
+          <div class="t">Hongi Ascend High-Master v3.0</div>
           <div class="s">Passage #${String(p.no||"").padStart(2,"0")} · ${escapeHtml(p.title)}</div>
         </div>
         <div class="s">${escapeHtml(p.source||"")}</div>
@@ -558,6 +801,102 @@ function renderPassage(){
   document.getElementById("flowBtn").textContent = "🌊 FLOW ON";
 }
 
+
+/* ===================== RENDER: grammar ===================== */
+function gramParse(str){
+  // [[text]] → <mark class="ghl">text</mark>; [[n|text]] → flow color
+  const re=/\[\[(?:(\d+)\|)?([^\]]+)\]\]/g;
+  let out="",last=0,m;
+  while((m=re.exec(str))!==null){
+    out+=escapeHtml(str.slice(last,m.index));
+    if(m[1]) out+=`<mark class="flow-token flow-c${m[1]}">${escapeHtml(m[2])}</mark>`;
+    else     out+=`<mark class="hl">${escapeHtml(m[2])}</mark>`;
+    last=m.index+m[0].length;
+  }
+  out+=escapeHtml(str.slice(last));
+  return out;
+}
+function renderGrammar(){
+  const all = loadGrammars();
+  const g = all.find(x=>x.id===currentPid);
+  if(!g){ go("dash"); return; }
+  const junior = isJuniorTags(g.targetTags) || isJuniorSession(session);
+
+  const exHtml = (g.examples||[]).map((e,i)=>`
+    <div class="ex-block">
+      <div class="en"><span class="gram-tag" style="margin-right:6px">예 ${i+1}</span>${gramParse(e.en||"")}</div>
+      ${e.ko?`<div class="ko">${escapeHtml(e.ko)}</div>`:""}
+      ${e.note?`<div class="note">▸ ${escapeHtml(e.note)}</div>`:""}
+    </div>`).join("");
+
+  const prHtml = (g.practice||[]).map((p,i)=>`
+    <div class="pq" data-i="${i}">
+      <div><b>Q${i+1}.</b> ${escapeHtml(p.q||"")}
+        <button class="btn no-print" data-rev="${i}" style="margin-left:8px">정답 보기</button>
+      </div>
+      <div class="a">정답: <b>${escapeHtml(p.a||"")}</b> · ${escapeHtml(p.why||"")}</div>
+    </div>`).join("");
+
+  const memo = junior ? `<div class="memo-box no-print"></div><div class="memo-box no-print"></div>` : "";
+  const banner = junior ? `<div class="junior-banner no-print">📘 중등부 가독성 모드 · 글자 크기 +10% · 메모칸 포함</div>` : "";
+
+  document.getElementById("main").innerHTML = `
+    <button class="btn back-btn no-print" id="backBtn">← 목록으로</button>
+    ${banner}
+    <div class="hl-tools no-print">
+      <span style="font-size:11px;color:#64748b;font-weight:700">🖍 형광펜:</span>
+      <button class="pen on" data-pen="yellow" style="background:#fef08a">노랑</button>
+      <button class="pen" data-pen="green" style="background:#bbf7d0">초록</button>
+      <button class="pen" data-pen="pink" style="background:#fbcfe8">분홍</button>
+      <button class="pen" data-pen="off">OFF</button>
+      <span style="font-size:11px;color:#64748b">→ 본문에서 단어/구를 드래그하면 칠해집니다.</span>
+    </div>
+    <div class="sheet ${junior?"junior":""} hl-target" id="sheet">
+      <div class="head">
+        <div>
+          <div class="t">Hongi Ascend High-Master v3.0 · Grammar</div>
+          <div class="s">Unit #${String(g.no||"").padStart(2,"0")} · ${escapeHtml(g.category||"")} · ${escapeHtml(g.title)}</div>
+        </div>
+        <div class="s">${(g.targetTags||["ALL"]).map(t=>escapeHtml(t)).join(" · ")}</div>
+      </div>
+      ${g.formula?`<div class="formula">📐 ${gramParse(g.formula)}</div>`:""}
+      ${g.description?`<div class="gram-desc">${gramParse(g.description)}</div>`:""}
+      <div class="section"><h2>① 예문 분석 (Highlight)</h2>${exHtml}</div>
+      ${prHtml?`<div class="section"><h2>② 연습문제</h2>${prHtml}${memo}</div>`:memo}
+    </div>
+  `;
+  document.getElementById("backBtn").addEventListener("click",()=>go("dash"));
+  document.querySelectorAll("[data-rev]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      b.closest(".pq").classList.toggle("show");
+    });
+  });
+
+  // highlighter
+  let pen="yellow";
+  document.querySelectorAll(".pen").forEach(b=>{
+    b.addEventListener("click",()=>{
+      document.querySelectorAll(".pen").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      pen = b.dataset.pen;
+    });
+  });
+  document.getElementById("sheet").addEventListener("mouseup",()=>{
+    if(pen==="off") return;
+    const sel=window.getSelection();
+    if(!sel || sel.isCollapsed) return;
+    const range=sel.getRangeAt(0);
+    if(!document.getElementById("sheet").contains(range.commonAncestorContainer)) return;
+    const mark=document.createElement("mark");
+    mark.className="user-hl"+(pen==="yellow"?"":" "+pen);
+    try{ range.surroundContents(mark); sel.removeAllRanges(); }catch(e){}
+  });
+
+  document.getElementById("flowBtn").style.display="none";
+  document.getElementById("printBtn").style.display="";
+  document.getElementById("homeBtn").style.display="";
+}
+
 /* ===================== RENDER router ===================== */
 function render(){
   // who
@@ -568,6 +907,7 @@ function render(){
     who.innerHTML = `<b>${escapeHtml(session.id)}</b> · ${escapeHtml(session.schoolName)} ${escapeHtml(session.grade)}학년 <span class="role-chip student">STUDENT</span>`;
   }
   if(currentView==="dash") renderDashboard();
+  else if(currentView==="grammar") renderGrammar();
   else renderPassage();
 }
 
