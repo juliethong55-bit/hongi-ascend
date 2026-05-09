@@ -3,215 +3,1445 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>홍이어쎈 통합 포털 · Hongi Ascend v4.5 FULL</title>
+<title>홍이어쎈 통합 포털 · Hongi Ascend v5.0 — 어휘 플로우 & 시각 지능 통합</title>
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║  홍이어쎈 통합 포털 v5.0 — 완전 통합본                              ║
+║  [Part 1: 스타일 및 데이터] + [Part 2: 통합 엔진 로직]              ║
+║                                                                      ║
+║  ① SVG 어휘 플로우 화살표 — FlowConnections 완전 이식               ║
+║     · getBoundingClientRect 기반 좌표 계산                          ║
+║     · 그룹별 베지어 곡선 + defs>marker 화살표                       ║
+║     · strokeDasharray 애니메이션 (1.2s 무한)                        ║
+║     · ResizeObserver + requestAnimationFrame 스케줄러               ║
+║  ② 중등부 적층형 카드 레이아웃 (중등독해.html §9 완전 내재화)        ║
+║     · isJuniorSession() → story-block / psg-box / anl-card 분기    ║
+║     · 고등부: 원본 180mm 분석지 스타일 유지                          ║
+║  ③ 문법 다이어그램 렌더링 엔진 (중등문법.html 시각 요소 재현)        ║
+║     · grammar.diagram 객체 → renderGramDiagram()                   ║
+║     · grammar.practiceSets → renderPracticeSets()                  ║
+║  ④ Seneca 13문장 + [[n|word]] 마크업 완전 보존                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+-->
 <style>
-  :root{
-    --bg:#f5f7fb; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
-    --primary:#1d4ed8; --primary-ink:#ffffff; --admin:#9333ea;
-    --f1:#fde68a; --f2:#bbf7d0; --f3:#bfdbfe; --f4:#fbcfe8; --f5:#ddd6fe;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
-    font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;}
-  button{font-family:inherit;cursor:pointer}
-  
-  /* ===== Login ===== */
-  #login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(135deg,#1e3a8a,#1d4ed8 60%,#0ea5e9);z-index:100;padding:20px}
-  #login .box{background:#fff;border-radius:20px;padding:36px 32px;width:380px;box-shadow:0 30px 80px rgba(0,0,0,.3)}
-  #login h1{margin:0 0 4px;font-size:22px;letter-spacing:-.5px}
-  #login p.sub{margin:0 0 22px;color:var(--muted);font-size:13px}
-  #login label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
-  #login input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;margin-bottom:8px}
-  #login button.go{margin-top:10px;width:100%;padding:12px;background:var(--primary);color:#fff;border:0;border-radius:12px;font-weight:800;font-size:14px}
-  #login .err{color:#b91c1c;font-size:12px;margin-top:8px;min-height:16px;text-align:center}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
 
-  /* ===== App Shell & UI Components ===== */
-  #app{display:none}
-  .topbar{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:14px}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:900}
-  .brand .h{width:32px;height:32px;border-radius:9px;background:var(--primary);color:#fff;display:grid;place-items:center}
-  .spacer{flex:1}
-  .btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700}
-  .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-  .btn.warn{background:#f59e0b;color:#fff;border-color:#f59e0b}
-  .btn.admin{background:var(--admin);color:#fff;border-color:var(--admin)}
+/* ═══════════════════════════════════════════════════════
+   §1. 디자인 토큰
+═══════════════════════════════════════════════════════ */
+:root {
+  --bg:#f5f7fb; --card:#fff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+  --primary:#1d4ed8; --primary-ink:#fff; --admin:#9333ea;
+  /* FLOW 5색 팔레트 — index.html FlowConnections 색상 완전 이식 */
+  --flow-1:#fde68a; --flow-2:#bbf7d0; --flow-3:#bfdbfe; --flow-4:#fbcfe8; --flow-5:#ddd6fe;
+  /* 중등 토큰 */
+  --blue:#3182F6; --blue-lt:#EBF3FF; --blue-md:#C4DEFF;
+  --gray-50:#F9FAFB; --gray-200:#E5E8EB; --gray-400:#9EA5B0;
+  --gray-600:#6B7280; --gray-800:#1F2937;
+  --red:#F04452; --red-lt:#FFF0F1;
+  --green:#00B493; --green-lt:#E8FBF7;
+  --orange:#FF6B35; --orange-lt:#FFF3EE;
+  --purple:#6C63FF; --purple-lt:#F0EFFF;
+  --pad-h:14px; --pad-v:10px;
+}
 
-  /* ===== Sheet & Harness (The Core) ===== */
-  .wrap{padding:20px;display:flex;justify-content:center}
-  .container{width:min(1080px,100%)}
-  .sheet{width:180mm;max-width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14mm;margin:0 auto;box-shadow:0 10px 40px rgba(0,0,0,0.05);position:relative}
-  .sheet.junior{font-size:115%; line-height:2.0}
-  .sent{border:1px solid var(--line);border-radius:10px;padding:15px;margin-bottom:15px;position:relative}
-  .en{font-size:1.1em;line-height:1.8;margin-bottom:8px}
-  .ko{font-size:0.95em;color:#334155;border-top:1px dashed var(--line);padding-top:10px}
-  
-  /* FLOW Highlight */
-  .flow-token{border-radius:3px;padding:0 2px}
-  .flow-on .flow-c1{background:var(--f1)}
-  .flow-on .flow-c2{background:var(--f2)}
-  .flow-on .flow-c3{background:var(--f3)}
-  .flow-on .flow-c4{background:var(--f4)}
-  .flow-on .flow-c5{background:var(--f5)}
+/* ═══════════════════════════════════════════════════════
+   §2. RESET
+═══════════════════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  margin:0!important;padding:0!important;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+}
+button{font-family:inherit;cursor:pointer;}
 
-  /* Admin & Dashboard */
-  .admin-panel{background:#fff;border:2px solid var(--admin);border-radius:14px;padding:18px;margin-bottom:16px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer}
-  
-  @media print{
-    .no-print{display:none !important}
-    .sheet{width:auto;border:0;box-shadow:none;padding:0}
-    @page{margin:15mm}
-  }
+/* ═══════════════════════════════════════════════════════
+   §3. LOGIN
+═══════════════════════════════════════════════════════ */
+#login{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#1e3a8a,#1d4ed8 60%,#0ea5e9);z-index:50;padding:20px;
+}
+#login .box{
+  background:#fff;border-radius:20px;padding:36px 32px;width:380px;
+  box-shadow:0 30px 80px rgba(0,0,0,.3);
+}
+#login h1{margin:0 0 4px;font-size:22px;letter-spacing:-.5px;}
+#login p.sub{margin:0 0 22px;color:var(--muted);font-size:13px;}
+#login label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;}
+#login input{
+  width:100%;padding:11px 12px;border:1px solid var(--line);
+  border-radius:10px;font-size:14px;font-family:inherit;
+}
+#login input:focus{outline:none;border-color:var(--primary);}
+#login button.go{
+  margin-top:18px;width:100%;padding:12px;background:var(--primary);
+  color:#fff;border:0;border-radius:12px;font-weight:800;font-size:14px;
+}
+#login .err{color:#b91c1c;font-size:12px;margin-top:8px;min-height:16px;}
+#login .hint{margin-top:14px;font-size:11px;color:var(--muted);text-align:center;line-height:1.7;}
+#login .hint code{background:#f1f5f9;padding:1px 6px;border-radius:4px;}
+
+/* ═══════════════════════════════════════════════════════
+   §4. APP SHELL
+═══════════════════════════════════════════════════════ */
+#app{display:none;}
+.topbar{
+  position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);
+  padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.3px;}
+.brand .h{
+  width:32px;height:32px;border-radius:9px;background:var(--primary);
+  color:#fff;display:grid;place-items:center;font-weight:900;
+}
+.brand small{display:block;font-weight:500;color:var(--muted);font-size:11px;}
+.who{font-size:12px;color:var(--muted);margin-left:8px;}
+.who b{color:var(--ink);}
+.role-chip{font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;margin-left:6px;}
+.role-chip.admin  {background:#f3e8ff;color:#6b21a8;}
+.role-chip.student{background:#dbeafe;color:#1e40af;}
+.role-chip.junior {background:#fef9c3;color:#854d0e;}
+.spacer{flex:1;}
+.btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:12px;font-weight:700;}
+.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.btn.warn   {background:#f59e0b;color:#fff;border-color:#f59e0b;}
+.btn.admin  {background:var(--admin);color:#fff;border-color:var(--admin);}
+.btn.flow-on{background:var(--primary);color:#fff;}
+.wrap{padding:20px;display:flex;justify-content:center;}
+.container{width:min(1080px,100%);}
+
+/* ═══════════════════════════════════════════════════════
+   §5. DASHBOARD CARDS
+═══════════════════════════════════════════════════════ */
+.dash-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;}
+.dash-head h2{margin:0;font-size:18px;letter-spacing:-.4px;}
+.dash-head .sub{font-size:12px;color:var(--muted);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.card{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;
+  cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(15,23,42,.08);}
+.card .no{font-size:11px;color:var(--muted);font-weight:700;}
+.card .ttl{font-size:15px;font-weight:800;margin:4px 0 6px;letter-spacing:-.3px;}
+.card .topic{font-size:12px;color:#334155;line-height:1.5;}
+.card .tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;}
+.tag{font-size:10px;background:#eff6ff;color:#1e40af;padding:2px 7px;border-radius:999px;font-weight:700;}
+.tag.all{background:#dcfce7;color:#166534;}
+.card.gram{border-left:4px solid #9333ea;}
+.card.gram .no{color:#9333ea;}
+.gram-tag{font-size:10px;background:#f3e8ff;color:#6b21a8;padding:2px 7px;border-radius:999px;font-weight:700;}
+.empty{padding:40px;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:14px;}
+
+/* ═══════════════════════════════════════════════════════
+   §6. SHEET — 고등부 180mm 분석지 (원본 완전 유지)
+═══════════════════════════════════════════════════════ */
+.sheet{
+  width:180mm;max-width:100%;background:#fff;border:1px solid var(--line);
+  border-radius:14px;padding:14mm;box-shadow:0 10px 40px rgba(15,23,42,.06);margin:0 auto;
+}
+.head{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:14px;
+}
+.head .t{font-size:18px;font-weight:900;letter-spacing:-.4px;}
+.head .s{font-size:11px;color:var(--muted);}
+.meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.thesis{
+  background:#f1f5f9;border-left:4px solid var(--primary);
+  padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;
+}
+/* 고등부 문장 카드 */
+.sent{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;position:relative;}
+.sent .no{
+  position:absolute;top:-9px;left:10px;background:var(--primary);color:#fff;
+  font-size:10px;padding:1px 8px;border-radius:999px;font-weight:800;
+}
+.en{font-size:13.5px;line-height:1.7;margin:4px 0;}
+.ko{font-size:12px;color:#334155;border-top:1px dashed var(--line);padding-top:6px;}
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11px;}
+th,td{border:1px solid var(--line);padding:4px 6px;vertical-align:top;text-align:left;}
+th{background:#f8fafc;font-weight:700;color:#475569;}
+.section{margin-top:16px;border-top:2px solid var(--ink);padding-top:10px;}
+.section h2{font-size:14px;margin:0 0 8px;letter-spacing:-.3px;}
+.hb li{font-size:12px;margin-bottom:4px;line-height:1.55;}
+.blank{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;margin:5px 0;}
+.blank input{padding:3px 8px;border:1px solid var(--line);border-radius:6px;font-size:12px;min-width:120px;}
+.blank .ans{display:none;color:#0f766e;font-weight:700;}
+.blank.show .ans{display:inline;}
+.var{border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:8px;font-size:12px;}
+.var .q{font-weight:700;margin-bottom:4px;}
+.var ol{margin:4px 0 4px 18px;padding:0;}
+.var .ans{font-size:11px;color:#0f766e;margin-top:4px;}
+.var .rat{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ═══════════════════════════════════════════════════════
+   §7. FLOW TOKEN & SVG OVERLAY
+   ─ index.html FlowConnections CSS 완전 이식
+═══════════════════════════════════════════════════════ */
+.flow-token{
+  border-radius:4px;padding:1px 4px;font-weight:700;
+  transition:background-color 0.4s ease;
+  background:transparent; /* FLOW OFF 기본값 */
+}
+/* FLOW ON: sentences-wrap에 .flow-on 클래스 부여 시 활성화 */
+.flow-on .flow-c1{background:var(--flow-1);}
+.flow-on .flow-c2{background:var(--flow-2);}
+.flow-on .flow-c3{background:var(--flow-3);}
+.flow-on .flow-c4{background:var(--flow-4);}
+.flow-on .flow-c5{background:var(--flow-5);}
+/* SVG 오버레이 */
+.sentences-wrap{position:relative;}
+.flow-svg-overlay{
+  position:absolute;inset:0;pointer-events:none;z-index:2;
+  overflow:visible;display:block;
+}
+@media print{.flow-svg-overlay{display:none!important;}}
+
+/* ═══════════════════════════════════════════════════════
+   §8. JUNIOR 하네스 & 중등 적층형 카드
+═══════════════════════════════════════════════════════ */
+/* 기존 junior 스타일 유지 */
+.sheet.junior{font-size:110%;}
+.sheet.junior .en{font-size:15px;line-height:2.0;}
+.sheet.junior .ko{font-size:13.5px;line-height:1.9;}
+.sheet.junior .sent{padding:14px 16px;margin-bottom:14px;border-width:2px;}
+.sheet.junior .gram-desc{font-size:14.5px;line-height:2.0;}
+.sheet.junior .formula-gram{font-size:14.5px;padding:14px;}
+.sheet.junior .section h2{font-size:15.5px;}
+.sheet.junior table{font-size:12.5px;}
+.sheet.junior th,.sheet.junior td{padding:6px 8px;}
+.junior-banner{
+  background:#fff7ed;border:1px solid #fdba74;color:#9a3412;
+  font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:10px;font-weight:700;
+}
+.memo-box{
+  border:1px dashed #94a3b8;border-radius:8px;height:60px;margin-top:6px;
+  background:repeating-linear-gradient(transparent,transparent 19px,#e2e8f0 20px);
+  position:relative;
+}
+.memo-box::before{
+  content:"📝 메모";position:absolute;top:-9px;left:10px;
+  background:#fff;padding:0 6px;font-size:10px;color:#64748b;font-weight:700;
+}
+
+/* 중등부 적층형 카드 (중등독해.html §9 완전 이식) */
+.story-block{
+  width:100%;break-inside:avoid;page-break-inside:avoid;
+  margin-bottom:14px;border:1px solid var(--gray-200);
+  border-radius:8px;overflow:hidden;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+}
+.s-banner{
+  display:flex;align-items:center;gap:8px;
+  background:var(--blue);color:#fff;padding:8px 14px;
+}
+.s-icon{font-size:14px;flex-shrink:0;}
+.s-ko{font-size:13px;font-weight:800;letter-spacing:-.3px;line-height:1.2;}
+.s-en-sub{font-size:10px;font-weight:500;opacity:.85;letter-spacing:.3px;}
+.psg-box{
+  width:100%;background:var(--gray-50);
+  border-bottom:1px solid var(--gray-200);padding:10px 14px;
+}
+.psg-label{
+  font-size:9.5px;font-weight:800;color:var(--blue);
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;
+}
+.psg-text{font-size:14px;line-height:1.9;color:var(--gray-800);letter-spacing:-.01em;}
+.psg-text p{margin-bottom:2px;}
+.sn{
+  display:inline-block;background:var(--blue);color:#fff;
+  font-size:9.5px;font-weight:800;width:18px;height:18px;border-radius:50%;
+  text-align:center;line-height:18px;margin-right:3px;vertical-align:middle;
+}
+.excl{color:var(--orange);font-weight:800;}
+.anl-list{width:100%;display:flex;flex-direction:column;}
+.anl-card{
+  width:100%;background:#fff;border-bottom:1px solid var(--gray-200);
+  padding:9px 14px;break-inside:avoid;page-break-inside:avoid;
+}
+.anl-card:last-child{border-bottom:none;}
+.ac-num{font-size:10px;font-weight:800;color:var(--blue);margin-bottom:5px;}
+.ac-en{
+  font-size:13px;font-weight:700;color:var(--gray-800);line-height:1.5;
+  padding:4px 8px 4px 10px;background:var(--blue-lt);
+  border-left:3px solid var(--blue);border-radius:0 5px 5px 0;
+  margin-bottom:5px;letter-spacing:-.01em;
+}
+.ac-en em{font-style:normal;font-weight:800;color:var(--blue);}
+.ac-ko{
+  font-size:12px;color:var(--gray-600);line-height:1.4;
+  margin-bottom:7px;padding-left:10px;border-left:2px solid var(--gray-200);
+}
+.tag-row{display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;}
+.tc{
+  font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:10px;
+  white-space:nowrap;flex-shrink:0;letter-spacing:.2px;line-height:1.6;
+}
+.tc-g{background:var(--blue-lt);  color:var(--blue);  border:1px solid var(--blue-md);}
+.tc-v{background:var(--orange-lt);color:var(--orange);border:1px solid #FFCDB5;}
+.tc-i{background:var(--purple-lt);color:var(--purple);border:1px solid #C3BFF9;}
+.tc-body{font-size:12.5px;line-height:1.45;color:var(--gray-800);flex:1;}
+.tc-body strong{color:var(--blue);font-weight:800;}
+.tc-body .vc{color:var(--orange);font-weight:700;}
+.tc-body .ins{color:var(--purple);font-weight:700;}
+
+/* ═══════════════════════════════════════════════════════
+   §9. ADMIN PANEL
+═══════════════════════════════════════════════════════ */
+.admin-panel{
+  background:#fff;border:2px solid var(--admin);border-radius:14px;
+  padding:18px;margin-bottom:16px;
+}
+.admin-panel h3{margin:0 0 4px;font-size:15px;color:var(--admin);letter-spacing:-.3px;}
+.admin-panel .ph{font-size:11px;color:var(--muted);margin-bottom:12px;}
+.admin-panel .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+.admin-panel label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:700;}
+.admin-panel input,.admin-panel textarea{
+  width:100%;padding:7px 10px;border:1px solid var(--line);
+  border-radius:8px;font-size:12px;font-family:inherit;
+}
+.admin-panel textarea{
+  min-height:90px;resize:vertical;
+  font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;
+}
+.admin-panel .actions{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;}
+.admin-panel .msg{font-size:11px;color:var(--muted);}
+.admin-panel .msg.ok{color:#0f766e;}
+.admin-panel .msg.err{color:#b91c1c;}
+.tabs{display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--line);}
+.tabs button{
+  background:transparent;border:0;padding:8px 14px;font-weight:800;
+  font-size:12px;color:var(--muted);border-bottom:3px solid transparent;border-radius:0;
+}
+.tabs button.on{color:var(--admin);border-bottom-color:var(--admin);}
+.pane{display:none;}.pane.on{display:block;}
+.back-btn{margin-bottom:12px;}
+
+/* ═══════════════════════════════════════════════════════
+   §10. 문법 VIEWER + 다이어그램 (중등문법.html 완전 이식)
+═══════════════════════════════════════════════════════ */
+.formula-gram{
+  background:#fef3c7;border-left:4px solid #f59e0b;border-radius:8px;
+  padding:10px 12px;font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:13px;margin:10px 0;
+}
+.gram-desc{font-size:13px;line-height:1.7;color:#1f2937;margin:8px 0 12px;white-space:pre-wrap;}
+.ex-block{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+.ex-block .en{font-size:13.5px;font-weight:600;line-height:1.7;}
+.ex-block .ko{font-size:12px;color:#334155;border-top:1px dashed var(--line);padding-top:6px;margin-top:6px;}
+.ex-block .note{font-size:11.5px;color:#6b21a8;margin-top:6px;line-height:1.6;}
+.ex-block mark.hl{background:#fef08a;padding:1px 4px;border-radius:4px;font-weight:700;}
+.pq{border:1px dashed var(--line);border-radius:8px;padding:8px 11px;margin-bottom:6px;font-size:12.5px;line-height:1.7;}
+.pq .a{display:none;color:#0f766e;font-weight:700;margin-top:4px;}
+.pq.show .a{display:block;}
+
+/* 다이어그램 CSS (중등문법.html 완전 이식) */
+.gram-diagram-wrap{
+  background:var(--gray-50);border:1px solid var(--gray-200);
+  border-radius:9px;padding:10px 12px;margin-bottom:14px;
+}
+.diag-grid{display:grid;grid-template-columns:1fr 34px 1fr;align-items:start;}
+.diag-box{border-radius:7px;padding:6px 8px;break-inside:avoid;}
+.diag-box-past{background:var(--orange-lt);border:1.5px solid var(--orange);}
+.diag-box-perf{background:var(--blue-lt);  border:1.5px solid var(--blue);}
+.diag-box-gen {background:var(--gray-50);  border:1.5px solid var(--gray-400);}
+.diag-label{font-size:9px;font-weight:800;letter-spacing:.3px;margin-bottom:3px;}
+.diag-label-past{color:var(--orange);}
+.diag-label-perf{color:var(--blue);}
+.diag-label-gen {color:var(--gray-800);}
+.diag-form{
+  font-size:9.5px;font-weight:700;font-family:'Courier New',monospace;
+  background:rgba(255,255,255,.7);border-radius:4px;padding:2px 5px;
+  display:inline-block;margin-bottom:3px;
+}
+.diag-rows{display:flex;flex-direction:column;gap:2.5px;margin-top:3px;}
+.diag-row{display:flex;align-items:flex-start;gap:4px;font-size:10.5px;color:var(--gray-600);line-height:1.45;}
+.diag-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.diag-dot-past{background:var(--orange);}
+.diag-dot-perf{background:var(--blue);}
+.diag-dot-gen {background:var(--gray-400);}
+.vs-col{display:flex;align-items:center;justify-content:center;}
+.vs-badge{
+  background:var(--gray-800);color:#fff;font-size:9px;font-weight:900;
+  width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+}
+.diag-footer{display:grid;grid-template-columns:1fr 34px 1fr;margin-top:8px;}
+.diag-key{border-radius:5px;padding:5px 7px;font-size:10.5px;line-height:1.55;}
+.diag-key-past{background:var(--orange-lt);border-left:3px solid var(--orange);}
+.diag-key-perf{background:var(--blue-lt);  border-left:3px solid var(--blue);}
+.diag-key strong{font-weight:800;display:block;margin-bottom:1px;}
+
+/* practice sets */
+.level-tabs{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;}
+.level-tab{font-size:9px;font-weight:800;padding:2px 10px;border-radius:20px;letter-spacing:.3px;}
+.lt-basic{background:var(--green-lt);color:var(--green);border:1px solid var(--green);}
+.lt-inter{background:var(--blue-lt); color:var(--blue); border:1px solid var(--blue);}
+.lt-high {background:var(--red-lt);  color:var(--red);  border:1px solid var(--red);}
+.set-block{margin-bottom:14px;}
+.set-label{
+  font-size:9.5px;font-weight:800;color:#fff;
+  background:var(--gray-800);display:inline-block;padding:2px 10px;
+  border-radius:4px;margin-bottom:6px;
+}
+.set-label.basic{background:var(--green);}
+.set-label.inter{background:var(--blue);}
+.set-label.high {background:var(--red);}
+.sent-cols{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;}
+.sent-item{
+  display:flex;gap:6px;align-items:flex-start;
+  background:#fff;border:1px solid var(--gray-200);border-radius:6px;padding:6px 8px;
+}
+.sent-num{
+  background:var(--blue);color:#fff;font-size:8.5px;font-weight:800;
+  min-width:17px;height:17px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.sent-num.red  {background:var(--red);}
+.sent-num.green{background:var(--green);}
+.sent-text{font-size:12.5px;line-height:1.6;color:var(--gray-800);word-break:break-word;}
+.sent-text em{font-style:normal;font-weight:800;color:var(--blue);}
+.sent-text .err{font-weight:800;color:var(--red);text-decoration:underline wavy var(--red);}
+.err-chip{
+  display:inline-block;background:var(--red-lt);color:var(--red);
+  font-size:7.5px;font-weight:700;padding:0 5px;border-radius:3px;margin-left:3px;vertical-align:middle;
+}
+.gq-block{border-top:1px solid var(--gray-200);padding-top:7px;margin-top:7px;}
+.gq-label{font-size:12px;font-weight:800;color:var(--gray-800);margin-bottom:5px;}
+.gq-choices{display:flex;gap:5px;flex-wrap:wrap;}
+.gq-choice{font-size:11px;background:#fff;border:1px solid var(--gray-200);border-radius:5px;padding:2px 9px;color:var(--gray-600);}
+.gq-choice.ans  {background:var(--blue-lt);border-color:var(--blue);color:var(--blue);font-weight:800;}
+.gq-choice.wrong{background:var(--red-lt); border-color:var(--red); color:var(--red); font-weight:800;}
+.gq-ans-key{font-size:10.5px;color:var(--gray-600);margin-top:5px;line-height:1.5;}
+.gq-ans-key .err-note{color:var(--red);font-weight:700;}
+
+/* ═══════════════════════════════════════════════════════
+   §11. HIGHLIGHTER
+═══════════════════════════════════════════════════════ */
+.hl-tools{display:flex;gap:6px;align-items:center;margin:6px 0 10px;flex-wrap:wrap;}
+.hl-tools .pen{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;background:#fff;}
+.hl-tools .pen.on{outline:3px solid #fde68a;}
+.hl-target mark.user-hl{background:#fef08a;border-radius:3px;padding:0 2px;}
+.hl-target mark.user-hl.green{background:#bbf7d0;}
+.hl-target mark.user-hl.pink {background:#fbcfe8;}
+
+/* ═══════════════════════════════════════════════════════
+   §12. PRINT
+═══════════════════════════════════════════════════════ */
+@page{size:A4;margin:15mm;}
+@media print{
+  body{background:#fff;}
+  .no-print,.topbar{display:none!important;}
+  .wrap{padding:0;}
+  .sheet{width:auto;border:0;box-shadow:none;padding:0;border-radius:0;max-width:none;}
+  .sent{break-inside:avoid;}
+  .section{break-inside:avoid;}
+  .anl-card,.story-block{break-inside:avoid;page-break-inside:avoid;}
+  .sheet.junior{font-size:115%;}
+  .sheet.junior .sent{break-inside:avoid;margin-bottom:18px;}
+  .memo-box{height:80px;}
+  .flow-svg-overlay{display:none!important;}
+  .hl-tools{display:none!important;}
+}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login">
   <div class="box">
     <h1>홍이어쎈 통합 포털</h1>
-    <p class="sub">v4.5 · FULL RECOVERY</p>
+    <p class="sub">Hongi Ascend v5.0 · SVG 어휘 플로우 · 시각 지능 통합</p>
     <label>아이디</label>
-    <input id="lg-id" type="text" placeholder="admin / 학번 8자리" />
+    <input id="lg-id" type="text" autocomplete="username" placeholder="admin / 학번 8자리" />
     <label>비밀번호</label>
-    <input id="lg-pw" type="password" placeholder="비밀번호" />
-    <button class="go" id="lg-go">시스템 접속</button>
+    <input id="lg-pw" type="password" autocomplete="current-password" placeholder="비밀번호" />
+    <button class="go" id="lg-go">로그인</button>
     <div class="err" id="lg-err"></div>
+    <div class="hint">
+      원장: <code>admin</code> / <code>ascend</code><br/>
+      학생: 학번 8자리 = <code>학교(2)+학년(1)+번호(5)</code> · PW=학번<br/>
+      중등부 <code>10·11·12</code> 코드 → 적층형 카드 자동 활성화
+    </div>
   </div>
 </div>
 
+<!-- APP -->
 <div id="app">
   <div class="topbar no-print">
-    <div class="brand"><div class="h">H</div><div>홍이어쎈 Ascend <small>v4.5</small></div></div>
+    <div class="brand">
+      <div class="h">H</div>
+      <div>홍이어쎈 Ascend <small>v5.0 · SVG FLOW · 시각 지능 · A4 180mm</small></div>
+    </div>
+    <div class="who" id="who"></div>
     <div class="spacer"></div>
-    <button class="btn" id="homeBtn">📋 목록</button>
-    <button class="btn primary" id="flowBtn">🌊 FLOW ON</button>
+    <button class="btn" id="homeBtn" style="display:none">📋 목록</button>
+    <button class="btn" id="flowBtn" style="display:none">🌊 FLOW ON</button>
+    <button class="btn primary" id="printBtn" style="display:none">🖨 A4 인쇄</button>
     <button class="btn warn" id="logout">로그아웃</button>
   </div>
   <div class="wrap"><div class="container" id="main"></div></div>
 </div>
 
 <script>
-const SCHOOLS = { "01":"홍이중","02":"세종고","03":"한솔고","04":"이화여고","99":"기타" };
-const SS_KEY = "hongi.session.v4.5";
+/* ═══════════════════════════════════════════════════════════════════════
+   [Part 2: 통합 엔진 로직]
+═══════════════════════════════════════════════════════════════════════ */
 
-/* --- [데이터 섹션: Seneca 13문장 및 문법 데이터] --- */
-const DEFAULT_PASSAGES = [
-{
-  id:"p1", no:1, title:"Seneca: The True Cost of Success", 
-  source:"Ryan Holiday / Seneca", topic:"성공의 진짜 가격은 자유의 상실이다.",
+/* ── SCHOOL MAP ── */
+const SCHOOLS={"01":"홍이중","02":"세종고","03":"한솔고","04":"이화여고","99":"기타"};
+
+/* ══════════════════════════════════════════════════════════════════════
+   DEFAULT_PASSAGES — Seneca 13문장 + [[n|word]] 마크업 완전 보존
+══════════════════════════════════════════════════════════════════════ */
+const DEFAULT_PASSAGES=[{
+  id:"p1",no:1,
+  title:"Seneca: The True Cost of Success",
+  source:"Ryan Holiday / Seneca 인용 (확정 원문)",
+  topic:"겉보기 성공의 진짜 가격은 자유의 상실이다.",
   targetTags:["ALL"],
+  thesis:"[[1|성공]]의 화려한 외양 뒤에는 [[2|강요된]] 행동과 [[3|자유의 상실]]이라는 [[4|숨겨진 대가]]가 존재한다.",
   sentences:[
-    {ko:"세상에서 가장 강력하고, 부유하며, 유명한 사람들 몇 명을 살펴보라.", en:"Take a look at some of the most [[1|powerful]], [[1|rich]], and [[1|famous]] people in the world.", vocab:[["powerful","adj.","강력한","influential","weak"]]},
-    {ko:"그들의 성공이 가져다준 화려한 장식들과 그들이 살 수 있는 것들은 무시하라.", en:"Ignore the [[1|trappings]] of their [[1|success]] and what they’re able to buy.", vocab:[["trappings","n.","겉치레","ornaments","essentials"]]},
-    {ko:"그 대신 그들이 그 대가로 어쩔 수 없이 내어주는 것을 보라.", en:"Look instead at what they’re [[2|forced]] to [[4|trade in return]].", vocab:[["forced","adj.","강요된","compelled","voluntary"]]},
-    {ko:"대개? 자유다. 그들의 일은 정장을 입을 것을 요구한다.", en:"Mostly? [[3|Freedom]]. Their work [[2|demands]] they wear a suit.", vocab:[["freedom","n.","자유","liberty","slavery"]]},
-    {ko:"그들의 성공은 어떤 파티에 참석하고, 좋아하지 않는 사람들에게 아부하는 일에 달려 있다.", en:"Their [[1|success]] [[2|depends on]] attending certain parties, [[5|kissing up]] to people.", vocab:[["kiss up to","phr.","아부하다","flatter","defy"]]},
-    {ko:"그것은 필연적으로 자신이 실제로 생각하는 것을 말할 수 없음을 깨닫게 만들 것이다.", en:"It will [[2|require]]—[[2|inevitably]]—realizing they are [[3|unable to say what they actually think]].", vocab:[["inevitably","adv.","필연적으로","unavoidably","possibly"]]},
-    {ko:"더 나쁘게는, 그것은 그들이 다른 종류의 사람이 되거나 나쁜 짓을 하기를 요구한다는 것이다.", en:"Worse, it [[2|demands]] that they [[5|become a different type of person]] or [[5|do bad things]].", vocab:[["demand","v.","요구하다","require","allow"]]},
-    {ko:"물론, 그것은 보수가 좋을 수도 있다 — 그러나 그들은 그 거래를 진정으로 따져본 적이 없다.", en:"Sure, it might [[1|pay well]]—but they haven’t truly examined the [[4|transaction]].", vocab:[["transaction","n.","거래","exchange","gift"]]},
-    {ko:"세네카가 말했듯이, “노예 상태는 대리석과 황금 아래에 거(居)한다.”", en:"As Seneca put it, “[[3|Slavery]] resides under [[1|marble and gold]].”", vocab:[["slavery","n.","노예 상태","bondage","freedom"]]},
-    {ko:"너무 많은 성공한 사람들이 자기 스스로 만든 감옥의 죄수다.", en:"Too many [[1|successful]] people are [[3|prisoners]] in [[3|jails]] of their own making.", vocab:[["successful","adj.","성공한","prosperous","failed"]]},
-    {ko:"그들이 결코 자신들이 원했던 곳에 도달하지 못했다 — 그들은 단지 더 비싼 감옥을 샀을 뿐이다.", en:"They never got to where they wanted to be—they just bought a more [[1|expensive]] jail.", vocab:[["expensive","adj.","비싼","costly","cheap"]]}
+    {ko:"세상에서 가장 강력하고, 부유하며, 유명한 사람들 몇 명을 살펴보라.",
+     en:"Take a look at some of the most [[1|powerful]], [[1|rich]], and [[1|famous]] people in the world.",
+     vocab:[["powerful","adj.","강력한, 영향력 있는","influential, mighty, dominant","weak, powerless"],
+            ["rich","adj.","부유한","wealthy, affluent, well-off","poor, destitute"],
+            ["famous","adj.","유명한","renowned, celebrated, prominent","obscure, unknown"]]},
+    {ko:"그들의 성공이 가져다준 화려한 장식들과 그들이 살 수 있는 것들은 무시하라.",
+     en:"Ignore the [[1|trappings]] of their [[1|success]] and what they\u2019re able to buy.",
+     vocab:[["ignore","v.","무시하다","disregard, overlook, dismiss","notice, heed"],
+            ["trappings","n.(pl.)","겉치레, 부속물, 장식","ornaments, adornments, accoutrements","essentials, substance"],
+            ["success","n.","성공","achievement, triumph, prosperity","failure, defeat"]]},
+    {ko:"그 대신 그들이 그 대가로 어쩔 수 없이 내어주는 것을 보라 — 성공이 그들에게 무엇을 치르게 했는지를 보라.",
+     en:"Look instead at what they\u2019re [[2|forced]] to [[4|trade in return]]\u2014look at what [[1|success]] has [[4|cost]] them.",
+     vocab:[["forced","adj.","강요된, 어쩔 수 없는","compelled, coerced, obliged","voluntary, willing"],
+            ["trade","v./n.","맞바꾸다, 거래(하다)","exchange, swap, barter","retain, keep"],
+            ["in return","phr.","그 대가로","in exchange, as a trade-off","for free, gratis"],
+            ["cost","v.","(대가를) 치르게 하다","exact, charge, deprive of","give, grant"]]},
+    {ko:"대개? 자유다. 그들의 일은 정장을 입을 것을 요구한다.",
+     en:"Mostly? [[3|Freedom]]. Their work [[2|demands]] they wear a suit.",
+     vocab:[["mostly","adv.","대개, 주로","primarily, largely, chiefly","rarely, seldom"],
+            ["freedom","n.","자유","liberty, autonomy, independence","slavery, bondage"],
+            ["demand","v.","요구하다","require, insist on, exact","offer, relinquish"],
+            ["suit","n.","정장","formal attire, business dress","casual wear"]]},
+    {ko:"그들의 성공은 어떤 파티에 참석하고, 좋아하지 않는 사람들에게 아부하는 일에 달려 있다.",
+     en:"Their [[1|success]] [[2|depends on]] attending certain parties, [[5|kissing up]] to people they don\u2019t like.",
+     vocab:[["depend on","phr.v.","~에 달려 있다","rely on, hinge on","be independent of"],
+            ["attend","v.","참석하다","be present at, show up at","miss, skip"],
+            ["kiss up to","phr.v.","아부하다","flatter, fawn over, suck up to","snub, defy"],
+            ["certain","adj.","특정한, 어떤","particular, specific","any, random"]]},
+    {ko:"그것은 — 필연적으로 — 자신이 실제로 생각하는 것을 말할 수 없음을 깨닫게 만들 것이다.",
+     en:"It will [[2|require]]\u2014[[2|inevitably]]\u2014realizing they are [[3|unable to say what they actually think]].",
+     vocab:[["require","v.","요구하다, 필요로 하다","demand, necessitate, call for","exempt, dispense with"],
+            ["inevitably","adv.","필연적으로","unavoidably, inescapably, certainly","avoidably, possibly"],
+            ["realize","v.","깨닫다","recognize, grasp, perceive","ignore, miss"],
+            ["actually","adv.","실제로","in fact, in reality, genuinely","supposedly, ostensibly"]]},
+    {ko:"더 나쁜 것은, 그것은 그들이 다른 종류의 사람이 되거나 나쁜 짓을 하기를 요구한다는 것이다.",
+     en:"Worse, it [[2|demands]] that they [[5|become a different type of person]] or [[5|do bad things]].",
+     vocab:[["worse","adv./adj.","더 나쁘게(은)","more gravely, even more so","better"],
+            ["demand (that)","v.","~할 것을 요구하다","insist that, require that","permit, allow"],
+            ["type","n.","종류, 유형","kind, sort, category","\u2014"]]},
+    {ko:"물론, 그것은 보수가 좋을 수도 있다 — 그러나 그들은 그 거래를 진정으로 따져본 적이 없다.",
+     en:"Sure, it might [[1|pay well]]\u2014but they haven\u2019t truly examined the [[4|transaction]].",
+     vocab:[["sure","adv.","물론, 분명히","certainly, indeed, granted","doubtfully"],
+            ["pay well","phr.","보수가 좋다","be lucrative, be remunerative","pay poorly"],
+            ["truly","adv.","진정으로","genuinely, sincerely, really","superficially, falsely"],
+            ["examine","v.","면밀히 살피다, 따져보다","scrutinize, inspect, investigate","overlook, ignore"],
+            ["transaction","n.","거래","exchange, deal, bargain","gift, donation"]]},
+    {ko:"세네카가 말했듯이, \u201C노예 상태는 대리석과 황금 아래에 거(居)한다.\u201D",
+     en:"As Seneca [[2|put it]], \u201C[[5|Slavery]] [[2|resides]] under [[1|marble and gold]].\u201D",
+     vocab:[["put it","phr.","(말로) 표현하다","phrase it, express it, word it","\u2014"],
+            ["slavery","n.","노예 상태","bondage, servitude, enslavement","freedom, liberty"],
+            ["reside","v.","거(居)하다, 머무르다","dwell, lie, exist","depart, leave"],
+            ["marble and gold","phr.","대리석과 황금(부의 상징)","luxury, opulence, splendor","poverty, austerity"]]},
+    {ko:"너무 많은 성공한 사람들이 자기 스스로 만든 감옥의 죄수다.",
+     en:"Too many [[1|successful]] people are [[3|prisoners]] in [[3|jails]] of their own making.",
+     vocab:[["successful","adj.","성공한","accomplished, prosperous, thriving","unsuccessful, failed"],
+            ["prisoner","n.","죄수, 포로","captive, inmate, detainee","free person, liberator"],
+            ["jail","n.","감옥","prison, cell, dungeon","freedom, sanctuary"],
+            ["of one\u2019s own making","phr.","스스로 자초한","self-inflicted, self-imposed","imposed by others"]]},
+    {ko:"그것이 네가 원하는 것인가?",
+     en:"Is that what you want?",
+     vocab:[["want","v.","원하다","desire, wish for, crave","reject, decline"]]},
+    {ko:"그것이 네가 그토록 열심히 노력해 향해 가고 있는 것인가?",
+     en:"Is that what you\u2019re working hard toward?",
+     vocab:[["work hard toward","phr.","~을 향해 열심히 노력하다","strive for, labor toward, push for","neglect, abandon"],
+            ["toward","prep.","~을 향해","in the direction of, in pursuit of","away from"]]},
+    {ko:"그렇지 않기를 바라자.",
+     en:"Let\u2019s hope not.",
+     vocab:[["hope","v./n.","바라다, 희망(하다)","wish, trust, anticipate","despair, dread"],
+            ["Let\u2019s ~","phr.","~하자(권유)","Shall we, We should","\u2014"]]}
   ],
-  habruta:[ "필자는 왜 성공을 '감옥'에 비유했나요?", "여러분이 생각하는 성공의 대가는 무엇입니까?" ]
-}
-];
-/* --- [데이터 섹션: 문법 데이터 전수 복원] --- */
-const DEFAULT_GRAMMARS = [
+  habruta:[
+    "필자는 왜 \u2018powerful, rich, and famous\u2019를 첫 문장에서 병치했는가? 이 병치가 독자의 시선을 어디로 유도하려는 장치인지 토론하라.",
+    "\u2018Ignore the trappings ... Look instead at what they\u2019re forced to trade\u2019의 명령형 두 문장은 어떤 사고 전환(reframing)을 강요하는가?",
+    "\u2018Mostly? Freedom.\u2019이라는 짧은 문답형 구문이 글 전체에서 차지하는 수사적 효과는 무엇인가?",
+    "Seneca의 인용 \u201CSlavery resides under marble and gold.\u201D에서 \u2018marble and gold\u2019와 \u2018slavery\u2019의 거리(對比)는 본문의 어느 표현들과 재진술 관계를 이루는가?",
+    "마지막 세 문장이 \u2018질문-질문-답변\u2019 구조를 취한 이유는? 이 구조가 청중에게 강요하는 메타인지는 무엇인가?"
+  ],
+  blanks:[
+    ["Ignore the ____ of their success and what they\u2019re able to buy.","trappings","겉치레/부속물"],
+    ["Look instead at what they\u2019re forced to ____ in return.","trade","맞바꾸다"],
+    ["It will require\u2014____\u2014realizing they are unable to say what they actually think.","inevitably","필연적으로"],
+    ["Sure, it might pay well\u2014but they haven\u2019t truly ____ the transaction.","examined","면밀히 살피다"],
+    ["As Seneca put it, \u201C____ resides under marble and gold.\u201D","Slavery","노예 상태"],
+    ["Too many successful people are ____ in jails of their own making.","prisoners","죄수"]
+  ],
+  variants:[
+    {type:"주제",q:"윗글의 주제로 가장 적절한 것은?",
+     choices:["the moral superiority of wealthy elites","the hidden price the powerful pay in lost freedom",
+              "practical strategies for becoming rich and famous","why Seneca admired marble and gold"],
+     answer:1,rationale:"\u2018forced to trade · cost · Freedom · Slavery · prisoners\u2019이 일관되게 성공의 대가 = 자유의 상실을 재진술."},
+    {type:"제목",q:"윗글의 제목으로 가장 적절한 것은?",
+     choices:["Marble, Gold, and the Joy of Power","Prisoners in Jails of Their Own Making",
+              "Why Kissing Up Pays Off","Freedom Is Overrated"],
+     answer:1,rationale:"끝에서 두 번째 문장 \u2018prisoners in jails of their own making\u2019이 결론적 비유."},
+    {type:"요약문",q:"빈칸 (A), (B)에 들어갈 말로 가장 적절한 것은? — Behind the trappings of success lies a (A)____ in which the powerful trade their (B)____ for marble and gold.",
+     choices:["(A) gift / (B) ambition","(A) transaction / (B) freedom","(A) celebration / (B) wealth","(A) reward / (B) suit"],
+     answer:1,rationale:"본문 transaction + Mostly? Freedom. + Slavery resides under marble and gold 핵심 어휘 변형."}
+  ]
+}];
+
+/* ══════════════════════════════════════════════════════════════════════
+   DEFAULT_GRAMMARS — diagram + practiceSets 필드 포함
+══════════════════════════════════════════════════════════════════════ */
+const DEFAULT_GRAMMARS=[
 {
-  id:"g1", no:1, category:"시제", title:"현재완료(have p.p.) 4용법",
+  id:"g1",no:1,category:"시제",
+  title:"현재완료(have p.p.) 4용법",
   formula:"have/has + p.p.  →  ① 완료 ② 경험 ③ 계속 ④ 결과",
-  description:"과거의 사건을 ‘지금’과 연결해 말할 때 쓴다.\n· 완료(just/already/yet)  · 경험(ever/never/before)\n· 계속(for/since)  · 결과(현재 상태가 남아 있음)",
+  description:"과거의 사건을 '지금'과 연결해 말할 때 쓴다.\n· 완료(just/already/yet)  · 경험(ever/never/before)\n· 계속(for/since)  · 결과(현재 상태가 남아 있음)",
   targetTags:["ALL"],
+  diagram:{
+    type:"vs",
+    left:{label:"과거형 (Simple Past)",labelClass:"diag-label-past",boxClass:"diag-box-past",
+          form:"V-ed / 불규칙 과거형",dotClass:"diag-dot-past",
+          rows:["과거 특정 시점에 <strong>완결·단절</strong>",
+                "yesterday / ago / last / in+과거연도 / when절(과거)",
+                "현재와 <strong>무관</strong> — \"그때 그랬어, 끝\""]},
+    right:{label:"현재완료 (Present Perfect)",labelClass:"diag-label-perf",boxClass:"diag-box-perf",
+           form:"have / has + p.p.",dotClass:"diag-dot-perf",
+           rows:["과거 → 현재 <strong>연결·영향·계속</strong>",
+                 "since / for / just / already / yet / ever / never / recently",
+                 "현재와 <strong>연결</strong> — \"지금도 관련 있어\""]},
+    footer:{
+      left:"<strong>❌ 현재완료 불가 부사</strong><br>yesterday · two days ago · last week · in 2019",
+      leftClass:"diag-key-past",
+      right:"<strong>✅ 현재완료 필수 부사</strong><br>since · for · just · already · yet · ever · never · recently",
+      rightClass:"diag-key-perf"
+    }
+  },
+  practiceSets:[
+    {
+      level:"basic",setNo:1,
+      label:"SET 1 · BASIC — 옳은 문장 묶음 고르기",
+      items:[
+        {num:"①",numClass:"green",text:"She <em>visited</em> her grandparents last <em>summer</em> and brought them fresh flowers."},
+        {num:"②",numClass:"green",text:"He <em>has already finished</em> his homework, so he can watch TV <em>now</em>."},
+        {num:"③",numClass:"red",  text:"I <em>have seen</em> that movie <span class=\"err\">yesterday</span> with my friends.<span class=\"err-chip\">❌ 오류</span>"},
+        {num:"④",numClass:"green",text:"They <em>have lived</em> in this city <em>since</em> they got married five years ago."},
+        {num:"⑤",numClass:"red",  text:"We <em>have moved</em> to a new house <span class=\"err\">two years ago</span> and never looked back.<span class=\"err-chip\">❌ 오류</span>"},
+        {num:"⑥",numClass:"green",text:"The team <em>won</em> the championship <em>in 2022</em> after years of hard training."}
+      ],
+      q:"문법상 <span style=\"color:var(--green)\">옳은</span> 문장끼리 바르게 묶은 것은?",
+      choices:["① ①②③","② ①②④⑥","③ ②④⑤","④ ①③⑤⑥","⑤ ②③④"],
+      answer:1,
+      ansKey:"<span class=\"err-note\">③ have seen → saw</span> (yesterday: 과거단절) &nbsp;|&nbsp; <span class=\"err-note\">⑤ have moved → moved</span> (two years ago: 과거단절)"
+    },
+    {
+      level:"basic",setNo:2,
+      label:"SET 2 · BASIC — 틀린 문장 묶음 고르기",
+      items:[
+        {num:"①",numClass:"green",text:"I <em>have never tried</em> sushi, but I <em>want</em> to visit Japan someday."},
+        {num:"②",numClass:"red",  text:"Did you <em>ever visit</em> the museum <span class=\"err\">since last year</span>? The new exhibit looks amazing.<span class=\"err-chip\">❌ 오류</span>"},
+        {num:"③",numClass:"green",text:"She <em>lost</em> her wallet <em>when</em> she was walking through the market."},
+        {num:"④",numClass:"red",  text:"He <em>has gone</em> to Paris <span class=\"err\">last month</span> for a business trip.<span class=\"err-chip\">❌ 오류</span>"},
+        {num:"⑤",numClass:"green",text:"The scientist <em>has just published</em> a groundbreaking paper on climate change."},
+        {num:"⑥",numClass:"red",  text:"They <em>have built</em> this bridge <span class=\"err\">in 1998</span>, which now connects two islands.<span class=\"err-chip\">❌ 오류</span>"}
+      ],
+      q:"문법상 <span style=\"color:var(--red)\">틀린</span> 문장끼리 바르게 묶은 것은?",
+      choices:["① ①③⑤","② ②③⑥","③ ②④⑥","④ ①④⑥","⑤ ③④⑤"],
+      answer:2,
+      ansKey:"<span class=\"err-note\">② Did → Have you ever visited</span> (since) &nbsp;|&nbsp; <span class=\"err-note\">④ has gone → went</span> (last month) &nbsp;|&nbsp; <span class=\"err-note\">⑥ have built → built</span> (in 1998)"
+    }
+  ],
   examples:[
-    {en:"I [[have just finished]] my homework.", ko:"나는 막 숙제를 끝냈다.", note:"완료용법 — just가 단서"},
-    {en:"We [[have lived]] here [[for]] ten years.", ko:"우리는 여기 10년째 살고 있다.", note:"계속용법 — for/since"}
+    {en:"I [[have just finished]] my homework.",ko:"나는 막 숙제를 끝냈다.",note:"완료용법 — just가 단서"},
+    {en:"She [[has never been]] to Paris.",ko:"그녀는 파리에 가본 적이 없다.",note:"경험용법 — never/ever"},
+    {en:"We [[have lived]] here [[for]] ten years.",ko:"우리는 여기 10년째 살고 있다.",note:"계속용법 — for/since"},
+    {en:"He [[has lost]] his key.",ko:"그는 열쇠를 잃어버렸다(지금도 없음).",note:"결과용법 — 현재 상태"}
+  ],
+  practice:[
+    {q:"I (live / have lived) in Seoul since 2015.",a:"have lived",why:"since + 시점 → 현재완료 계속"},
+    {q:"He (went / has gone) to school an hour ago.",a:"went",why:"ago는 명백한 과거 → 단순과거"}
   ]
 },
-{
-  id:"g2", no:2, category:"준동사", title:"동명사 vs to부정사",
-  formula:"enjoy/finish + V-ing  |  want/decide + to V",
-  description:"동사에 따라 목적어로 동명사만 혹은 to부정사만 받는 경우가 있습니다.",
-  targetTags:["중1","중2","ALL"],
-  examples:[
-    {en:"I [[enjoy reading]] novels.", ko:"나는 소설 읽는 것을 즐긴다.", note:"enjoy + V-ing"},
-    {en:"She [[decided to study]] abroad.", ko:"그녀는 유학 가기로 결심했다.", note:"decide + to V"}
-  ]
-}
+{id:"g2",no:2,category:"준동사",
+ title:"동명사 vs to부정사 (목적어 선택)",
+ formula:"enjoy/finish/avoid/mind + V-ing   |   want/decide/hope/plan + to V",
+ description:"동사에 따라 목적어로 동명사만 / to부정사만 / 둘 다(의미 차이) 받는 경우가 있다.",
+ targetTags:["중1","중2","중3","ALL"],
+ examples:[
+   {en:"I [[enjoy reading]] novels.",ko:"나는 소설 읽는 것을 즐긴다.",note:"enjoy + V-ing"},
+   {en:"She [[decided to study]] abroad.",ko:"그녀는 유학 가기로 결심했다.",note:"decide + to V"},
+   {en:"He [[stopped smoking]] last year.",ko:"그는 작년에 담배를 끊었다.",note:"stop + V-ing = ~하던 것을 멈추다"},
+   {en:"He [[stopped to smoke]].",ko:"그는 담배를 피우려고 멈췄다.",note:"stop + to V = ~하기 위해 멈추다 (부사적)"}
+ ],
+ practice:[
+   {q:"Would you mind (open / opening) the window?",a:"opening",why:"mind + V-ing"},
+   {q:"They hope (to win / winning) the game.",a:"to win",why:"hope + to V"}
+ ]},
+{id:"g3",no:3,category:"관계사",
+ title:"관계대명사 who / which / that",
+ formula:"선행사(사람)+who  |  선행사(사물)+which  |  공통+that  (콤마 뒤 that 불가)",
+ description:"두 문장을 하나로 합칠 때 공통 명사를 대신하는 대명사이자 접속사 역할을 한다.",
+ targetTags:["중2","중3","ALL"],
+ examples:[
+   {en:"I have a friend [[who lives]] in Busan.",ko:"나는 부산에 사는 친구가 있다.",note:"선행사 friend(사람)"},
+   {en:"This is the book [[which I bought]] yesterday.",ko:"이것이 내가 어제 산 책이다.",note:"선행사 book(사물), 목적격"},
+   {en:"The man and his dog [[that]] are running are mine.",ko:"달리고 있는 그 남자와 그의 개는 내 것이다.",note:"사람+사물 동시 → that"}
+ ],
+ practice:[
+   {q:"I know a boy ___ can speak five languages.",a:"who",why:"선행사 boy(사람) + 주격"},
+   {q:"The car ___ he drives is red.",a:"which/that",why:"선행사 car(사물) + 목적격"}
+ ]}
 ];
 
-/* --- [핵심 시스템 엔진: 복구 및 로그인 강화] --- */
+/* ── STORE ── */
+const LS_KEY="hongi.passages.v3", LS_GR_KEY="hongi.grammars.v3", SS_KEY="hongi.session.v3";
+function loadPassages(){try{const r=localStorage.getItem(LS_KEY);const e=r?JSON.parse(r):[];return[...DEFAULT_PASSAGES,...(Array.isArray(e)?e:[])]}catch{return[...DEFAULT_PASSAGES]}}
+function saveExtraPassages(e){localStorage.setItem(LS_KEY,JSON.stringify(e));}
+function loadExtraPassages(){try{const r=localStorage.getItem(LS_KEY);return r?(JSON.parse(r)||[]):[]}catch{return[]}}
+function loadGrammars(){try{const r=localStorage.getItem(LS_GR_KEY);const e=r?JSON.parse(r):[];return[...DEFAULT_GRAMMARS,...(Array.isArray(e)?e:[])]}catch{return[...DEFAULT_GRAMMARS]}}
+function loadExtraGrammars(){try{const r=localStorage.getItem(LS_GR_KEY);return r?(JSON.parse(r)||[]):[]}catch{return[]}}
+function saveExtraGrammars(e){localStorage.setItem(LS_GR_KEY,JSON.stringify(e));}
+function getSession(){try{return JSON.parse(sessionStorage.getItem(SS_KEY)||"null")}catch{return null}}
+function setSession(s){sessionStorage.setItem(SS_KEY,JSON.stringify(s));}
+function clearSession(){sessionStorage.removeItem(SS_KEY);}
+
+/* ── AUTH ── */
+function parseStudentId(id){
+  if(!/^\d{8}$/.test(id))return null;
+  const school=id.slice(0,2),grade=id.slice(2,3),serial=id.slice(3);
+  return{role:"student",id,school,grade,serial,
+    schoolName:SCHOOLS[school]||`학교${school}`,
+    tags:["ALL",`S${school}`,`S${school}-G${grade}`,...(/^(1[0-2])$/.test(school)?["중"+grade]:[])],
+    isJunior:/^(1[0-2])$/.test(school)};
+}
+function authenticate(id,pw){
+  if(/^admin/i.test(id)){if(pw==="ascend")return{role:"admin",id,name:"원장(Admin)",tags:["*"],isJunior:false};return null;}
+  const s=parseStudentId(id);if(s&&pw===id)return s;return null;
+}
+function isJuniorTags(tags){return(tags||[]).some(t=>/^중[123]$/.test(t));}
+function isJuniorSession(s){if(!s||s.role!=="student")return false;return!!s.isJunior;}
+
+/* ── FILTER ── */
+function visiblePassages(session,all){
+  if(!session)return[];
+  if(session.role==="admin")return all;
+  return all.filter(p=>{const t=p.targetTags||["ALL"];return t.some(x=>session.tags.includes(x));});
+}
+
+/* ── HELPERS ── */
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FLOW PARSE — [[n|word]] → <mark class="flow-token flow-cn" data-flow-group="n">word</mark>
+   문법 모드: [[text]] → <mark class="hl">text</mark>
+═══════════════════════════════════════════════════════════════════════ */
+function flowParse(str){
+  const re=/\[\[(\d+)\|([^\]]+)\]\]/g;
+  let out="",last=0,m;
+  while((m=re.exec(str))!==null){
+    out+=escapeHtml(str.slice(last,m.index));
+    out+=`<mark class="flow-token flow-c${m[1]}" data-flow-group="${m[1]}">${escapeHtml(m[2])}</mark>`;
+    last=m.index+m[0].length;
+  }
+  out+=escapeHtml(str.slice(last));
+  return out;
+}
+function gramParse(str){
+  const re=/\[\[(?:(\d+)\|)?([^\]]+)\]\]/g;
+  let out="",last=0,m;
+  while((m=re.exec(str))!==null){
+    out+=escapeHtml(str.slice(last,m.index));
+    if(m[1])out+=`<mark class="flow-token flow-c${m[1]}">${escapeHtml(m[2])}</mark>`;
+    else     out+=`<mark class="hl">${escapeHtml(m[2])}</mark>`;
+    last=m.index+m[0].length;
+  }
+  out+=escapeHtml(str.slice(last));
+  return out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SVG FLOW CONNECTIONS — index.html FlowConnections 완전 이식 (vanilla JS)
+   ─────────────────────────────────────────────────────────────────────
+   원본 React 로직:
+   · containerRef → sentencesWrap DOM element
+   · .flow-token[data-flow-group] 수집 → 그룹별 배열
+   · 연속 쌍 좌표 계산 → Line[] 배열
+   · SVG path (베지어 곡선) + defs>marker (화살표) 생성
+   · strokeDasharray 애니메이션 (1.2s 무한)
+   · ResizeObserver + rAF 스케줄러
+═══════════════════════════════════════════════════════════════════════ */
+const GROUP_COLORS={
+  "1":"var(--flow-1)","2":"var(--flow-2)","3":"var(--flow-3)","4":"var(--flow-4)","5":"var(--flow-5)"
+};
+const SVG_NS="http://www.w3.org/2000/svg";
+
+let _flowRAF=null, _flowRO=null, _flowEnabled=false, _flowContainer=null;
+
+function scheduleSVGUpdate(){
+  if(_flowRAF)cancelAnimationFrame(_flowRAF);
+  _flowRAF=requestAnimationFrame(computeFlowSVG);
+}
+
+function computeFlowSVG(){
+  const container=_flowContainer;
+  if(!container||!_flowEnabled){clearFlowSVG(container);return;}
+  const rootBox=container.getBoundingClientRect();
+  const tokens=Array.from(container.querySelectorAll(".flow-token[data-flow-group]"));
+  /* 그룹별 수집 */
+  const byGroup=new Map();
+  tokens.forEach(t=>{
+    const g=t.dataset.flowGroup||"";
+    if(!g)return;
+    if(!byGroup.has(g))byGroup.set(g,[]);
+    byGroup.get(g).push(t);
+  });
+  /* 좌표 계산 */
+  const lines=[];
+  byGroup.forEach((arr,g)=>{
+    for(let i=0;i<arr.length-1;i++){
+      const a=arr[i].getBoundingClientRect();
+      const b=arr[i+1].getBoundingClientRect();
+      lines.push({
+        x1:a.left-rootBox.left+a.width/2, y1:a.bottom-rootBox.top,
+        x2:b.left-rootBox.left+b.width/2, y2:b.top-rootBox.top,
+        color:GROUP_COLORS[g]||"var(--primary)",group:g
+      });
+    }
+  });
+  /* 기존 SVG 제거 후 재생성 */
+  let svg=container.querySelector(".flow-svg-overlay");
+  if(svg)svg.remove();
+  if(!lines.length)return;
+
+  svg=document.createElementNS(SVG_NS,"svg");
+  svg.setAttribute("class","flow-svg-overlay no-print");
+  svg.setAttribute("width",rootBox.width);
+  svg.setAttribute("height",rootBox.height);
+  svg.setAttribute("viewBox",`0 0 ${rootBox.width} ${rootBox.height}`);
+
+  /* defs: 그룹별 arrowhead marker */
+  const defs=document.createElementNS(SVG_NS,"defs");
+  Object.entries(GROUP_COLORS).forEach(([g,c])=>{
+    const marker=document.createElementNS(SVG_NS,"marker");
+    marker.setAttribute("id",`arrow-v5-${g}`);
+    marker.setAttribute("viewBox","0 0 10 10");
+    marker.setAttribute("refX","8"); marker.setAttribute("refY","5");
+    marker.setAttribute("markerWidth","6"); marker.setAttribute("markerHeight","6");
+    marker.setAttribute("orient","auto-start-reverse");
+    const path=document.createElementNS(SVG_NS,"path");
+    path.setAttribute("d","M0,0 L10,5 L0,10 z");
+    path.setAttribute("fill",c); path.setAttribute("opacity","0.85");
+    marker.appendChild(path); defs.appendChild(marker);
+  });
+  svg.appendChild(defs);
+
+  /* lines: 베지어 곡선 + 애니메이션 (원본과 동일) */
+  lines.forEach((l,i)=>{
+    const dx=l.x2-l.x1, dy=l.y2-l.y1;
+    const dist=Math.hypot(dx,dy);
+    const curve=Math.min(80,dist/3);
+    const pathEl=document.createElementNS(SVG_NS,"path");
+    pathEl.setAttribute("d",`M ${l.x1} ${l.y1} C ${l.x1} ${l.y1+curve}, ${l.x2} ${l.y2-curve}, ${l.x2} ${l.y2}`);
+    pathEl.setAttribute("fill","none");
+    pathEl.setAttribute("stroke",l.color);
+    pathEl.setAttribute("stroke-width","1.6");
+    pathEl.setAttribute("stroke-opacity","0.55");
+    pathEl.setAttribute("stroke-dasharray","4 3");
+    pathEl.setAttribute("marker-end",`url(#arrow-v5-${l.group})`);
+    /* SVG animate (strokeDashoffset 흐름 애니메이션) */
+    const anim=document.createElementNS(SVG_NS,"animate");
+    anim.setAttribute("attributeName","stroke-dashoffset");
+    anim.setAttribute("from","0"); anim.setAttribute("to","-14");
+    anim.setAttribute("dur","1.2s"); anim.setAttribute("repeatCount","indefinite");
+    pathEl.appendChild(anim);
+    svg.appendChild(pathEl);
+  });
+
+  container.appendChild(svg);
+}
+
+function clearFlowSVG(container){
+  if(!container)return;
+  const svg=container.querySelector(".flow-svg-overlay");
+  if(svg)svg.remove();
+}
+
+function mountFlowObserver(container){
+  if(_flowRO){_flowRO.disconnect();}
+  _flowContainer=container;
+  _flowRO=new ResizeObserver(scheduleSVGUpdate);
+  _flowRO.observe(container);
+  window.addEventListener("resize",scheduleSVGUpdate);
+  /* 초기 250ms 딜레이 후 재계산 (DOM 안정화) */
+  setTimeout(scheduleSVGUpdate,250);
+}
+
+function unmountFlowObserver(){
+  if(_flowRO){_flowRO.disconnect();_flowRO=null;}
+  window.removeEventListener("resize",scheduleSVGUpdate);
+  _flowContainer=null;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GRAMMAR DIAGRAM RENDERER
+   ─ grammar.diagram 객체 → HTML 문자열 생성
+═══════════════════════════════════════════════════════════════════════ */
+function renderGramDiagram(d){
+  if(!d||d.type!=="vs")return"";
+  const {left:L,right:R,footer:F}=d;
+  const rowsL=(L.rows||[]).map(r=>`<div class="diag-row"><div class="diag-dot ${escapeHtml(L.dotClass)}"></div><div>${r}</div></div>`).join("");
+  const rowsR=(R.rows||[]).map(r=>`<div class="diag-row"><div class="diag-dot ${escapeHtml(R.dotClass)}"></div><div>${r}</div></div>`).join("");
+  return `
+  <div class="gram-diagram-wrap">
+    <div class="diag-grid">
+      <div class="diag-box ${escapeHtml(L.boxClass)}">
+        <div class="diag-label ${escapeHtml(L.labelClass)}">${escapeHtml(L.label)}</div>
+        <div class="diag-form">${escapeHtml(L.form)}</div>
+        <div class="diag-rows">${rowsL}</div>
+      </div>
+      <div class="vs-col"><div class="vs-badge">VS</div></div>
+      <div class="diag-box ${escapeHtml(R.boxClass)}">
+        <div class="diag-label ${escapeHtml(R.labelClass)}">${escapeHtml(R.label)}</div>
+        <div class="diag-form">${escapeHtml(R.form)}</div>
+        <div class="diag-rows">${rowsR}</div>
+      </div>
+    </div>
+    ${F?`<div class="diag-footer">
+      <div class="diag-key ${escapeHtml(F.leftClass||"")}"><div>${F.left||""}</div></div>
+      <div></div>
+      <div class="diag-key ${escapeHtml(F.rightClass||"")}"><div>${F.right||""}</div></div>
+    </div>`:""}
+  </div>`;
+}
+
+/* ── practice sets 렌더 ── */
+function renderPracticeSets(sets){
+  if(!sets||!sets.length)return"";
+  const levTabs=[...new Set(sets.map(s=>s.level))].map(l=>{
+    const cls=l==="basic"?"lt-basic":l==="inter"?"lt-inter":"lt-high";
+    const label=l==="basic"?"● BASIC":l==="inter"?"● INTERMEDIATE":"● HIGH-END";
+    return`<span class="level-tab ${cls}">${label}</span>`;
+  }).join("");
+  const setHtml=sets.map(s=>{
+    const lvCls=s.level==="basic"?"basic":s.level==="inter"?"inter":"high";
+    const items=s.items.map(it=>`
+      <div class="sent-item">
+        <div class="sent-num ${escapeHtml(it.numClass)}">${escapeHtml(it.num)}</div>
+        <div class="sent-text">${it.text}</div>
+      </div>`).join("");
+    const choices=s.choices.map((c,i)=>`<span class="gq-choice ${i===s.answer?"ans":""}">${escapeHtml(c)}</span>`).join("");
+    return`
+    <div class="set-block">
+      <div class="set-label ${lvCls}">${escapeHtml(s.label)}</div>
+      <div class="sent-cols">${items}</div>
+      <div class="gq-block">
+        <div class="gq-label">Q. ${s.q}</div>
+        <div class="gq-choices">${choices}</div>
+        <div class="gq-ans-key">${s.ansKey||""}</div>
+      </div>
+    </div>`;
+  }).join("");
+  return`<div class="level-tabs">${levTabs}</div>${setHtml}`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════════════════════════════ */
 let session=null, currentView="dash", currentPid=null, flowOn=false;
 
-function authenticate(id, pw){
-  if(id === "admin" && pw === "ascend") return {role:"admin", name:"원장님", tags:["*"]};
-  if(/^\d{8}$/.test(id) && pw === id){
-    const sc = id.slice(0,2), gr = id.slice(2,3);
-    return {role:"student", id, school:sc, grade:gr, tags:["ALL", "S"+sc, "중"+gr]};
-  }
-  return null;
+function go(view,pid){
+  currentView=view; currentPid=pid||null; flowOn=false;
+  unmountFlowObserver();
+  document.getElementById("flowBtn").textContent="🌊 FLOW ON";
+  document.getElementById("flowBtn").classList.remove("flow-on");
+  render();
 }
 
-function setSession(s){ sessionStorage.setItem(SS_KEY, JSON.stringify(s)); }
-function getSession(){ try { return JSON.parse(sessionStorage.getItem(SS_KEY)); } catch(e) { return null; } }
-function clearSession(){ sessionStorage.removeItem(SS_KEY); }
+/* ═══════════════════════════════════════════════════════════════════════
+   RENDER: DASHBOARD
+═══════════════════════════════════════════════════════════════════════ */
+function renderDashboard(){
+  const all=loadPassages(), list=visiblePassages(session,all);
+  const grAll=loadGrammars(), grList=visiblePassages(session,grAll);
+  const isAdmin=session.role==="admin";
+  const adminHtml=isAdmin?renderAdminPanel():"";
 
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function flowParse(str){ return str.replace(/\[\[(\d+)\|([^\]]+)\]\]/g, '<mark class="flow-token flow-c$1">$2</mark>'); }
+  const cards=list.map(p=>{
+    const tags=(p.targetTags||["ALL"]).map(t=>`<span class="tag ${t==="ALL"?"all":""}">${escapeHtml(t)}</span>`).join("");
+    return`<div class="card" data-pid="${escapeHtml(p.id)}">
+      <div class="no">Passage #${String(p.no||"").padStart(2,"0")}</div>
+      <div class="ttl">${escapeHtml(p.title)}</div>
+      <div class="topic">${escapeHtml(p.topic||"")}</div>
+      <div class="tags">${tags}</div>
+    </div>`;
+  }).join("");
 
+  const grCards=grList.map(g=>{
+    const tags=(g.targetTags||["ALL"]).map(t=>`<span class="tag ${t==="ALL"?"all":""}">${escapeHtml(t)}</span>`).join("");
+    return`<div class="card gram" data-gid="${escapeHtml(g.id)}">
+      <div class="no">Grammar #${String(g.no||"").padStart(2,"0")} · <span class="gram-tag">${escapeHtml(g.category||"문법")}</span></div>
+      <div class="ttl">${escapeHtml(g.title)}</div>
+      <div class="topic">${escapeHtml(g.formula||"")}</div>
+      <div class="tags">${tags}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("main").innerHTML=`
+    ${adminHtml}
+    <div class="dash-head">
+      <h2>${isAdmin?"📚 독해 지문":"📖 내 독해"}</h2>
+      <span class="sub">${list.length}개 · ${isAdmin?"원장 권한":`${escapeHtml(session.schoolName||"")} ${escapeHtml(session.grade||"")}학년`}</span>
+    </div>
+    ${list.length===0?`<div class="empty">📭 배정된 독해 지문이 없습니다.</div>`:""}
+    <div class="grid">${cards}</div>
+    <div class="dash-head" style="margin-top:22px">
+      <h2>${isAdmin?"🧩 문법 단원":"🧩 내 문법"}</h2>
+      <span class="sub">${grList.length}개</span>
+    </div>
+    ${grList.length===0?`<div class="empty">📭 배정된 문법 단원이 없습니다.</div>`:""}
+    <div class="grid">${grCards}</div>
+  `;
+
+  document.querySelectorAll(".card[data-pid]").forEach(el=>{el.addEventListener("click",()=>go("passage",el.dataset.pid));});
+  document.querySelectorAll(".card[data-gid]").forEach(el=>{el.addEventListener("click",()=>go("grammar",el.dataset.gid));});
+  if(isAdmin)bindAdminPanel();
+  document.getElementById("flowBtn").style.display="none";
+  document.getElementById("printBtn").style.display="none";
+  document.getElementById("homeBtn").style.display="none";
+}
+
+/* ─── ADMIN PANEL HTML ─── */
+function renderAdminPanel(){
+  const exP=loadExtraPassages().length, exG=loadExtraGrammars().length;
+  return`<div class="admin-panel">
+    <h3>🔐 Content Manager (원장 전용)</h3>
+    <div class="ph">독해 지문·문법 개념 추가 · localStorage 즉시 저장</div>
+    <div class="tabs">
+      <button class="tab-btn on" data-tab="tab-p">📖 독해 지문 관리 (${exP})</button>
+      <button class="tab-btn" data-tab="tab-g">🧩 문법 개념 관리 (${exG})</button>
+    </div>
+    <div class="pane on" id="tab-p">
+      <div class="row">
+        <div><label>제목</label><input id="cm-title" placeholder="예: Orwell - On Power" /></div>
+        <div><label>출처</label><input id="cm-source" placeholder="예: 1984 발췌" /></div>
+      </div>
+      <div class="row">
+        <div><label>주제(한글 한줄)</label><input id="cm-topic" placeholder="권력은 그 자체가 목적이다." /></div>
+        <div><label>대상 태그(쉼표) — ALL / S01 / S01-G2 / 중1·중2·중3</label><input id="cm-tags" placeholder="S01-G2, 중3" /></div>
+      </div>
+      <label>본문 영문 (한 줄에 한 문장, [[그룹|단어]] 마크업 가능)</label>
+      <textarea id="cm-en" placeholder="Power is not a means; it is an [[1|end]]."></textarea>
+      <label>직독직해 (영문과 같은 줄 수)</label>
+      <textarea id="cm-ko" placeholder="권력은 수단이 아니라 목적이다."></textarea>
+      <div class="actions">
+        <button class="btn admin" id="cm-add">+ 지문 추가</button>
+        <button class="btn" id="cm-clear">추가분 전체 삭제</button>
+        <span class="msg" id="cm-msg">현재 추가분: <b>${exP}</b>개</span>
+      </div>
+    </div>
+    <div class="pane" id="tab-g">
+      <div class="row">
+        <div><label>카테고리</label><input id="gm-cat" placeholder="시제" /></div>
+        <div><label>단원 제목</label><input id="gm-title" placeholder="현재완료 4용법" /></div>
+      </div>
+      <div class="row">
+        <div><label>핵심 공식</label><input id="gm-formula" placeholder="have/has + p.p. → 완료/경험/계속/결과" /></div>
+        <div><label>대상 태그(쉼표)</label><input id="gm-tags" placeholder="중2, 중3" /></div>
+      </div>
+      <label>상세 설명</label>
+      <textarea id="gm-desc" placeholder="과거의 사건을 '지금'과 연결해 말할 때 사용..."></textarea>
+      <label>예문 — 형식: EN | 해석 | 설명 (줄당 1개, [[단어]] 강조 가능)</label>
+      <textarea id="gm-ex" placeholder="I [[have just finished]] my homework. | 나는 막 숙제를 끝냈다. | 완료용법 — just"></textarea>
+      <label>연습문제 — 형식: 문제 | 정답 | 해설</label>
+      <textarea id="gm-pr" placeholder="I (live / have lived) in Seoul since 2015. | have lived | since+시점→현재완료"></textarea>
+      <div class="actions">
+        <button class="btn admin" id="gm-add">+ 문법 추가</button>
+        <button class="btn" id="gm-clear">추가분 전체 삭제</button>
+        <span class="msg" id="gm-msg">현재 추가분: <b>${exG}</b>개</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindAdminPanel(){
+  document.querySelectorAll(".admin-panel .tab-btn").forEach(b=>{
+    b.addEventListener("click",()=>{
+      document.querySelectorAll(".admin-panel .tab-btn").forEach(x=>x.classList.remove("on"));
+      document.querySelectorAll(".admin-panel .pane").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      document.getElementById(b.dataset.tab).classList.add("on");
+    });
+  });
+  function v(id){return(document.getElementById(id).value||"").trim();}
+
+  document.getElementById("cm-add").addEventListener("click",()=>{
+    const title=v("cm-title"),source=v("cm-source"),topic=v("cm-topic"),
+          tagsRaw=v("cm-tags"),en=v("cm-en"),ko=v("cm-ko");
+    const msg=document.getElementById("cm-msg");
+    if(!title||!en){msg.className="msg err";msg.textContent="제목과 본문은 필수입니다.";return;}
+    const enLines=en.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    const koLines=ko.split(/\r?\n/).map(s=>s.trim());
+    const sentences=enLines.map((line,i)=>({en:line,ko:koLines[i]||"",vocab:[]}));
+    const tags=(tagsRaw||"ALL").split(",").map(s=>s.trim()).filter(Boolean);
+    const extra=loadExtraPassages();
+    extra.push({id:"u"+Date.now(),no:DEFAULT_PASSAGES.length+extra.length+1,
+      title,source,topic,targetTags:tags.length?tags:["ALL"],
+      thesis:topic||"",sentences,habruta:[],blanks:[],variants:[]});
+    saveExtraPassages(extra);
+    msg.className="msg ok";msg.textContent=`✓ 추가됨. 현재 추가분: ${extra.length}개`;
+    setTimeout(()=>render(),400);
+  });
+  document.getElementById("cm-clear").addEventListener("click",()=>{
+    if(!confirm("localStorage에 추가된 지문을 모두 삭제할까요?"))return;
+    saveExtraPassages([]);render();
+  });
+  document.getElementById("gm-add").addEventListener("click",()=>{
+    const cat=v("gm-cat"),title=v("gm-title"),formula=v("gm-formula"),
+          tagsRaw=v("gm-tags"),desc=v("gm-desc"),exRaw=v("gm-ex"),prRaw=v("gm-pr");
+    const msg=document.getElementById("gm-msg");
+    if(!title){msg.className="msg err";msg.textContent="단원 제목은 필수입니다.";return;}
+    const examples=exRaw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map(line=>{
+      const[en,ko,note]=line.split("|").map(x=>(x||"").trim());return{en:en||"",ko:ko||"",note:note||""};
+    });
+    const practice=prRaw.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map(line=>{
+      const[q,a,why]=line.split("|").map(x=>(x||"").trim());return{q:q||"",a:a||"",why:why||""};
+    });
+    const tags=(tagsRaw||"ALL").split(",").map(s=>s.trim()).filter(Boolean);
+    const extra=loadExtraGrammars();
+    extra.push({id:"ug"+Date.now(),no:DEFAULT_GRAMMARS.length+extra.length+1,
+      category:cat||"기타",title,formula:formula||"",description:desc||"",
+      targetTags:tags.length?tags:["ALL"],examples,practice});
+    saveExtraGrammars(extra);
+    msg.className="msg ok";msg.textContent=`✓ 추가됨. 현재 추가분: ${extra.length}개`;
+    setTimeout(()=>render(),400);
+  });
+  document.getElementById("gm-clear").addEventListener("click",()=>{
+    if(!confirm("localStorage에 추가된 문법 단원을 모두 삭제할까요?"))return;
+    saveExtraGrammars([]);render();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RENDER: PASSAGE
+   ─ isJuniorSession → 중등부 적층형 카드 / 고등부 180mm 분석지 분기
+═══════════════════════════════════════════════════════════════════════ */
+function renderPassage(){
+  const all=loadPassages();
+  const p=all.find(x=>x.id===currentPid);
+  if(!p){go("dash");return;}
+  const junior=isJuniorTags(p.targetTags)||isJuniorSession(session);
+  const sheetClass=`sheet ${junior?"junior":""}`;
+
+  let bodyHtml="";
+
+  if(junior){
+    /* ── 중등부: 수직 적층형 카드 레이아웃 (중등독해.html §9 완전 이식) ── */
+    const sentCards=(p.sentences||[]).map((s,i)=>{
+      return`<div class="anl-card">
+        <div class="ac-num">S${i+1}</div>
+        <div class="ac-en">${flowParse(s.en||"")}</div>
+        ${s.ko?`<div class="ac-ko">${escapeHtml(s.ko)}</div>`:""}
+        ${(s.vocab&&s.vocab.length)?`
+        <div class="tag-row">
+          <span class="tc tc-v">Vocab</span>
+          <div class="tc-body">${s.vocab.map(v=>`<span class="vc">${escapeHtml(v[0])}</span> ${escapeHtml(v[2])}`).join(" / ")}</div>
+        </div>`:""}
+      </div>`;
+    }).join("");
+
+    bodyHtml=`
+    <div class="story-block">
+      <div class="s-banner">
+        <div class="s-icon">📖</div>
+        <div>
+          <div class="s-ko">${escapeHtml(p.title)}</div>
+          <div class="s-en-sub">${escapeHtml(p.source||"")}</div>
+        </div>
+      </div>
+      <div class="psg-box">
+        <div class="psg-label">📖 Reading Passage — 지문을 읽고 분석 카드를 완성하세요</div>
+        <div class="psg-text">
+          ${(p.sentences||[]).map((s,i)=>`<p><span class="sn">${i+1}</span>${escapeHtml(s.en||"")}</p>`).join("")}
+        </div>
+      </div>
+      <div class="anl-list">${sentCards}</div>
+    </div>`;
+
+  } else {
+    /* ── 고등부: 원본 180mm 분석지 스타일 (FLOW SVG 포함) ── */
+    const sentencesHtml=(p.sentences||[]).map((s,i)=>`
+      <div class="sent">
+        <span class="no">#${String(i+1).padStart(2,"0")}</span>
+        <div class="en">${flowParse(s.en||"")}</div>
+        ${s.ko?`<div class="ko">${escapeHtml(s.ko)}</div>`:""}
+        ${(s.vocab&&s.vocab.length)?`
+        <table>
+          <thead><tr><th style="width:18%">Word</th><th style="width:8%">POS</th><th style="width:24%">뜻</th><th style="width:25%">유의어</th><th style="width:25%">반의어</th></tr></thead>
+          <tbody>${s.vocab.map(v=>`<tr><td><b>${escapeHtml(v[0])}</b></td><td>${escapeHtml(v[1])}</td><td>${escapeHtml(v[2])}</td><td>${escapeHtml(v[3])}</td><td>${escapeHtml(v[4])}</td></tr>`).join("")}</tbody>
+        </table>`:""}
+      </div>`).join("");
+
+    bodyHtml=`
+    <div class="section">
+      <h2>① 본문 정밀 분석 (FLOW · 직독직해 · Vocab Master)</h2>
+      <div class="sentences-wrap" id="sentences-wrap">${sentencesHtml}</div>
+    </div>`;
+  }
+
+  /* 공통: 하브루타·빈칸·변형문제 */
+  const habrutaHtml=(p.habruta&&p.habruta.length)
+    ?`<div class="section"><h2>② 하브루타 메타인지 토론</h2><ol class="hb">${p.habruta.map(h=>`<li>${escapeHtml(h)}</li>`).join("")}</ol></div>`:"";
+
+  const blanksHtml=(p.blanks&&p.blanks.length)
+    ?`<div class="section"><h2>③ 빈칸 마스터 테스트</h2>${p.blanks.map((b,i)=>`
+      <div class="blank" data-i="${i}">
+        <span>${i+1}.</span>
+        <span>${escapeHtml(b[0]).replace("____",`<input data-ans="${escapeHtml(b[1])}" placeholder="(${escapeHtml(b[2])})"/>`)}</span>
+        <button class="btn" data-check="${i}">확인</button>
+        <span class="ans">정답: <b>${escapeHtml(b[1])}</b></span>
+      </div>`).join("")}</div>`:"";
+
+  const variantsHtml=(p.variants&&p.variants.length)
+    ?`<div class="section"><h2>④ 수능형 변형 문제</h2>${p.variants.map((v,i)=>`
+      <div class="var">
+        <div class="q">[변형 ${i+1} · ${escapeHtml(v.type)}] ${escapeHtml(v.q)}</div>
+        <ol>${v.choices.map(c=>`<li>${escapeHtml(c)}</li>`).join("")}</ol>
+        <div class="ans">정답: ${v.answer+1}번</div>
+        <div class="rat">근거: ${escapeHtml(v.rationale)}</div>
+      </div>`).join("")}</div>`:"";
+
+  document.getElementById("main").innerHTML=`
+    <button class="btn back-btn no-print" id="backBtn">← 목록으로</button>
+    ${junior?`<div class="junior-banner no-print">📘 중등부 가독성 모드 · 적층형 카드 · 메모칸 자동 포함</div>`:""}
+    <div class="${sheetClass}" id="sheet">
+      <div class="head">
+        <div>
+          <div class="t">Hongi Ascend High-Master v5.0${junior?" · 중등독해 클리닉":""}</div>
+          <div class="s">Passage #${String(p.no||"").padStart(2,"0")} · ${escapeHtml(p.title)}</div>
+        </div>
+        <div class="s">${escapeHtml(p.source||"")}</div>
+      </div>
+      <div class="meta">주제 · ${escapeHtml(p.topic||"")}</div>
+      ${p.thesis?`<div class="thesis">${flowParse(p.thesis)}</div>`:""}
+      ${bodyHtml}
+      ${habrutaHtml}${blanksHtml}${variantsHtml}
+      ${junior?`<div class="memo-box no-print"></div><div class="memo-box no-print"></div>`:""}
+    </div>
+  `;
+
+  document.getElementById("backBtn").addEventListener("click",()=>go("dash"));
+  document.querySelectorAll("[data-check]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const row=btn.closest(".blank");
+      const inp=row.querySelector("input");
+      const ok=(inp.value||"").trim().toLowerCase()===inp.dataset.ans.toLowerCase();
+      row.classList.add("show");inp.style.borderColor=ok?"#0f766e":"#b91c1c";
+    });
+  });
+
+  /* FLOW 버튼 표시 (고등부만) */
+  const fbtn=document.getElementById("flowBtn");
+  fbtn.style.display=junior?"none":"";
+  document.getElementById("printBtn").style.display="";
+  document.getElementById("homeBtn").style.display="";
+  fbtn.textContent="🌊 FLOW ON";
+  fbtn.classList.remove("flow-on");
+
+  /* 고등부: SVG 플로우 옵저버 마운트 */
+  if(!junior){
+    const wrap=document.getElementById("sentences-wrap");
+    if(wrap){_flowEnabled=false;mountFlowObserver(wrap);}
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RENDER: GRAMMAR
+   ─ diagram 필드 → 다이어그램 / practiceSets → 연습문제 SET 렌더
+═══════════════════════════════════════════════════════════════════════ */
+function renderGrammar(){
+  const all=loadGrammars();
+  const g=all.find(x=>x.id===currentPid);
+  if(!g){go("dash");return;}
+  const junior=isJuniorTags(g.targetTags)||isJuniorSession(session);
+
+  const exHtml=(g.examples||[]).map((e,i)=>`
+    <div class="ex-block">
+      <div class="en"><span class="gram-tag" style="margin-right:6px">예 ${i+1}</span>${gramParse(e.en||"")}</div>
+      ${e.ko?`<div class="ko">${escapeHtml(e.ko)}</div>`:""}
+      ${e.note?`<div class="note">▸ ${escapeHtml(e.note)}</div>`:""}
+    </div>`).join("");
+
+  const prHtml=(g.practice||[]).map((p,i)=>`
+    <div class="pq" data-i="${i}">
+      <div><b>Q${i+1}.</b> ${escapeHtml(p.q||"")}
+        <button class="btn no-print" data-rev="${i}" style="margin-left:8px">정답 보기</button>
+      </div>
+      <div class="a">정답: <b>${escapeHtml(p.a||"")}</b> · ${escapeHtml(p.why||"")}</div>
+    </div>`).join("");
+
+  const diagHtml=renderGramDiagram(g.diagram||null);
+  const pracSetHtml=renderPracticeSets(g.practiceSets||[]);
+  const memo=junior?`<div class="memo-box no-print"></div><div class="memo-box no-print"></div>`:"";
+  const banner=junior?`<div class="junior-banner no-print">📘 중등부 가독성 모드 · 다이어그램 확장 · 메모칸 포함</div>`:"";
+
+  document.getElementById("main").innerHTML=`
+    <button class="btn back-btn no-print" id="backBtn">← 목록으로</button>
+    ${banner}
+    <div class="hl-tools no-print">
+      <span style="font-size:11px;color:#64748b;font-weight:700">🖍 형광펜:</span>
+      <button class="pen on" data-pen="yellow" style="background:#fef08a">노랑</button>
+      <button class="pen" data-pen="green"  style="background:#bbf7d0">초록</button>
+      <button class="pen" data-pen="pink"   style="background:#fbcfe8">분홍</button>
+      <button class="pen" data-pen="off">OFF</button>
+      <span style="font-size:11px;color:#64748b">→ 드래그하면 형광펜이 칠해집니다.</span>
+    </div>
+    <div class="sheet ${junior?"junior":""} hl-target" id="sheet">
+      <div class="head">
+        <div>
+          <div class="t">Hongi Ascend v5.0 · Grammar${junior?" · 중등문법 클리닉":""}</div>
+          <div class="s">Unit #${String(g.no||"").padStart(2,"0")} · ${escapeHtml(g.category||"")} · ${escapeHtml(g.title)}</div>
+        </div>
+        <div class="s">${(g.targetTags||["ALL"]).map(t=>escapeHtml(t)).join(" · ")}</div>
+      </div>
+      ${diagHtml}
+      ${g.formula?`<div class="formula-gram">📐 ${gramParse(g.formula)}</div>`:""}
+      ${g.description?`<div class="gram-desc">${gramParse(g.description)}</div>`:""}
+      ${pracSetHtml?`<div class="section"><h2>📝 Multi-Mix 문법 연습</h2>${pracSetHtml}</div>`:""}
+      ${exHtml?`<div class="section"><h2>① 예문 분석 (Highlight)</h2>${exHtml}</div>`:""}
+      ${prHtml?`<div class="section"><h2>② 연습문제</h2>${prHtml}${memo}</div>`:memo}
+    </div>
+  `;
+
+  document.getElementById("backBtn").addEventListener("click",()=>go("dash"));
+  document.querySelectorAll("[data-rev]").forEach(b=>{
+    b.addEventListener("click",()=>{b.closest(".pq").classList.toggle("show");});
+  });
+
+  /* 형광펜 */
+  let pen="yellow";
+  document.querySelectorAll(".pen").forEach(b=>{
+    b.addEventListener("click",()=>{
+      document.querySelectorAll(".pen").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); pen=b.dataset.pen;
+    });
+  });
+  const sheet=document.getElementById("sheet");
+  sheet.addEventListener("mouseup",()=>{
+    if(pen==="off")return;
+    const sel=window.getSelection();
+    if(!sel||sel.isCollapsed)return;
+    const range=sel.getRangeAt(0);
+    if(!sheet.contains(range.commonAncestorContainer))return;
+    const mark=document.createElement("mark");
+    mark.className="user-hl"+(pen==="yellow"?"":" "+pen);
+    try{range.surroundContents(mark);sel.removeAllRanges();}catch(e){}
+  });
+
+  document.getElementById("flowBtn").style.display="none";
+  document.getElementById("printBtn").style.display="";
+  document.getElementById("homeBtn").style.display="";
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RENDER ROUTER
+═══════════════════════════════════════════════════════════════════════ */
 function render(){
-  const main = document.getElementById("main");
-  if(currentView === "dash"){
-    document.getElementById("flowBtn").style.display="none";
-    let html = `<div class="dash-head"><h2>${session.role==="admin"?"🏛 관리실":"📖 학습실"}</h2></div><div class="grid">`;
-    DEFAULT_PASSAGES.forEach(p => {
-      html += `<div class="card" onclick="viewPassage('${p.id}')"><div class="tag">독해</div><div class="ttl">${p.title}</div></div>`;
-    });
-    DEFAULT_GRAMMARS.forEach(g => {
-      html += `<div class="card" onclick="viewGrammar('${g.id}')"><div class="tag" style="background:#f3e8ff">문법</div><div class="ttl">${g.title}</div></div>`;
-    });
-    html += `</div>`;
-    main.innerHTML = html;
-  } else if(currentView === "passage"){
-    document.getElementById("flowBtn").style.display="block";
-    const p = DEFAULT_PASSAGES.find(x=>x.id===currentPid);
-    let sHtml = p.sentences.map((s,i)=>`<div class="sent"><div class="en">${flowParse(s.en)}</div><div class="ko">${s.ko}</div></div>`).join("");
-    main.innerHTML = `<div class="sheet" id="sheet"><h2>${p.title}</h2><hr/>${sHtml}</div>`;
+  const who=document.getElementById("who");
+  if(session.role==="admin"){
+    who.innerHTML=`<b>${escapeHtml(session.name)}</b> <span class="role-chip admin">ADMIN</span>`;
+  } else {
+    const juniorChip=isJuniorSession(session)?`<span class="role-chip junior">중등부</span>`:`<span class="role-chip student">STUDENT</span>`;
+    who.innerHTML=`<b>${escapeHtml(session.id)}</b> · ${escapeHtml(session.schoolName||"")} ${escapeHtml(session.grade||"")}학년 ${juniorChip}`;
   }
+  if(currentView==="dash")renderDashboard();
+  else if(currentView==="grammar")renderGrammar();
+  else renderPassage();
 }
 
-function viewPassage(id){ currentView="passage"; currentPid=id; render(); }
-function viewGrammar(id){ alert("문법 뷰어 가동 중..."); }
+/* ═══════════════════════════════════════════════════════════════════════
+   BOOT v5.0 — window.onload 이중 방어 (v4.6 유지)
+═══════════════════════════════════════════════════════════════════════ */
+window.onload=function(){
 
-/* --- [운명적 로그인 복구 로직] --- */
-function init(){
-  const saved = getSession();
-  if(saved){
-    session = saved;
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    render();
+  function tryLogin(){
+    try{
+      const id=(document.getElementById("lg-id").value||"").trim();
+      const pw=document.getElementById("lg-pw").value||"";
+      document.getElementById("lg-err").textContent="";
+      const s=authenticate(id,pw);
+      if(s){setSession(s);session=s;showApp();}
+      else{document.getElementById("lg-err").textContent="아이디 또는 비밀번호가 올바르지 않습니다. (학생 PW=학번)";}
+    }catch(e){
+      console.error("[v5.0 Boot] tryLogin error:",e);
+      document.getElementById("lg-err").textContent="오류가 발생했습니다. 다시 시도해 주세요.";
+    }
   }
-  
-  // 버튼 강제 바인딩 (먹통 방지)
-  const lgGo = document.getElementById("lg-go");
-  if(lgGo) lgGo.onclick = function() {
-    const s = authenticate(document.getElementById("lg-id").value.trim(), document.getElementById("lg-pw").value);
-    if(s){ setSession(s); session = s; location.reload(); }
-    else { document.getElementById("lg-err").textContent = "아이디/비밀번호를 확인해 주세요."; }
-  };
-  
-  document.getElementById("logout").onclick = () => { clearSession(); location.reload(); };
-  document.getElementById("homeBtn").onclick = () => { currentView="dash"; render(); };
-  document.getElementById("flowBtn").onclick = () => {
-    flowOn = !flowOn;
-    document.getElementById("sheet").classList.toggle("flow-on", flowOn);
-  };
-}
 
-window.onload = init;
+  function showApp(){
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+    go("dash");
+  }
+
+  /* 로그인 버튼 — preventDefault */
+  document.getElementById("lg-go").addEventListener("click",function(e){
+    e.preventDefault();tryLogin();
+  });
+
+  /* Enter 키 */
+  ["lg-pw","lg-id"].forEach(id=>{
+    document.getElementById(id).addEventListener("keydown",function(e){
+      if(e.key==="Enter"){e.preventDefault();tryLogin();}
+    });
+  });
+
+  /* 로그아웃 */
+  document.getElementById("logout").addEventListener("click",function(){
+    unmountFlowObserver();clearSession();location.reload();
+  });
+
+  /* ── FLOW 버튼 — SVG 오버레이 토글 ── */
+  document.getElementById("flowBtn").addEventListener("click",function(){
+    flowOn=!flowOn;
+    _flowEnabled=flowOn;
+    const fbtn=document.getElementById("flowBtn");
+
+    /* .flow-on 클래스로 토큰 배경색 토글 */
+    const wrap=document.getElementById("sentences-wrap");
+    if(wrap){
+      wrap.classList.toggle("flow-on",flowOn);
+      /* SVG 재계산 스케줄 */
+      scheduleSVGUpdate();
+    }
+
+    fbtn.textContent=flowOn?"🌊 FLOW OFF":"🌊 FLOW ON";
+    if(flowOn)fbtn.classList.add("flow-on");
+    else{fbtn.classList.remove("flow-on");if(wrap)clearFlowSVG(wrap);}
+  });
+
+  document.getElementById("printBtn").addEventListener("click",function(){window.print();});
+  document.getElementById("homeBtn").addEventListener("click",function(){go("dash");});
+
+  /* auto-resume */
+  try{const saved=getSession();if(saved){session=saved;showApp();}}
+  catch(e){console.error("[v5.0 Boot] auto-resume error:",e);}
+};
 </script>
 </body>
-</html>  
+</html>
