@@ -911,68 +911,81 @@ function render(){
   else renderPassage();
 }
 
-/* ===================== Boot & Login Fix (v3.2) ===================== */
+/* ===================== Boot & Login Fix (v3.3) ===================== */
 
-// 1. 로그인 실행 함수 (중복 제거 및 통합)
-function executeLogin() {
-  const id = document.getElementById("lg-id").value.trim();
-  const pw = document.getElementById("lg-pw").value;
-  const s = authenticate(id, pw);
-  
-  if (s) {
-    setSession(s);
-    session = s;
-    // 앱 화면 전환
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    go("dash"); 
-  } else {
-    document.getElementById("lg-err").textContent = "아이디 또는 비밀번호가 올바르지 않습니다.";
+// 1. 로그인 실행 함수
+function tryLogin() {
+  try {
+    const idField = document.getElementById("lg-id");
+    const pwField = document.getElementById("lg-pw");
+    if (!idField || !pwField) return;
+
+    const id = idField.value.trim();
+    const pw = pwField.value;
+    const s = authenticate(id, pw);
+    
+    if (s) {
+      setSession(s);
+      session = s;
+      showApp();
+    } else {
+      const errField = document.getElementById("lg-err");
+      if (errField) errField.textContent = "아이디 또는 비밀번호가 올바르지 않습니다.";
+    }
+  } catch (e) {
+    console.error("Login Error:", e);
   }
 }
 
-// 2. 브라우저가 준비되면 즉시 버튼에 생명 불어넣기
-function initializeSystem() {
-  const lgGo = document.getElementById("lg-go");
-  const lgPw = document.getElementById("lg-pw");
-  const logout = document.getElementById("logout");
+function showApp() {
+  const loginSection = document.getElementById("login");
+  const appSection = document.getElementById("app");
+  if (loginSection) loginSection.style.display = "none";
+  if (appSection) appSection.style.display = "block";
+  go("dash");
+}
 
-  if (lgGo) {
-    lgGo.onclick = function(e) {
-      e.preventDefault();
-      executeLogin();
+// 2. 안전한 이벤트 바인딩 (에러 방지용)
+function safeBind() {
+  try {
+    const lgGo = document.getElementById("lg-go");
+    if (lgGo) lgGo.onclick = (e) => { e.preventDefault(); tryLogin(); };
+
+    const lgPw = document.getElementById("lg-pw");
+    if (lgPw) lgPw.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); tryLogin(); } };
+
+    const logoutBtn = document.getElementById("logout");
+    if (logoutBtn) logoutBtn.onclick = () => { clearSession(); location.reload(); };
+
+    // 나머지 버튼들(flowBtn 등)은 존재할 때만 연결 (중요!)
+    const fBtn = document.getElementById("flowBtn");
+    if (fBtn) fBtn.onclick = () => {
+      flowOn = !flowOn;
+      const sh = document.getElementById("sheet");
+      if (sh) sh.classList.toggle("flow-on", flowOn);
+      fBtn.textContent = flowOn ? "🌊 FLOW OFF" : "🌊 FLOW ON";
     };
-  }
 
-  if (lgPw) {
-    lgPw.onkeydown = function(e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        executeLogin();
-      }
-    };
-  }
+    const pBtn = document.getElementById("printBtn");
+    if (pBtn) pBtn.onclick = () => window.print();
 
-  if (logout) {
-    logout.onclick = function() {
-      clearSession();
-      location.reload();
-    };
-  }
+    const hBtn = document.getElementById("homeBtn");
+    if (hBtn) hBtn.onclick = () => go("dash");
 
-  // 자동 로그인 유지 확인
-  const saved = getSession();
-  if (saved) {
-    session = saved;
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    go("dash");
+    // 자동 로그인 체크
+    const saved = getSession();
+    if (saved) { session = saved; showApp(); }
+  } catch (e) {
+    console.warn("Binding Warning (Expected in Login Screen):", e);
   }
 }
 
-// 스크립트 로드 즉시 및 페이지 로드 완료 시 이중 체크
-initializeSystem();
-window.addEventListener('load', initializeSystem);
+// 초기화 실행
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", safeBind);
+} else {
+  safeBind();
+}
 
 </script>
 </body>
